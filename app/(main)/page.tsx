@@ -12,7 +12,7 @@ export default function HomePage() {
         <CardHeader>
           <CardTitle>Support Tools</CardTitle>
           <CardDescription>
-            Use the navigation above to access support tools and reports.
+            Use the navigation on the side to access support tools and reports.
           </CardDescription>
         </CardHeader>
         <CardContent>
