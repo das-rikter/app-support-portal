@@ -9,6 +9,7 @@ RUN npm ci
 # Build the application
 FROM base AS builder
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
@@ -20,6 +21,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOSTNAME="0.0.0.0"
 ENV PORT=3000
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # next-auth requires this at runtime
 ARG AUTH_SECRET

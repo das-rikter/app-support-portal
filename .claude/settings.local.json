@@ -11,7 +11,12 @@
       "Bash(npx next *)",
       "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); print\\(data[0]['text']\\)\")",
       "Bash(node -e ' *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(az account *)",
+      "Bash(docker info *)",
+      "Bash(bash deploy.sh)",
+      "Bash(az acr *)",
+      "Bash(az containerapp *)"
     ]
   }
 }

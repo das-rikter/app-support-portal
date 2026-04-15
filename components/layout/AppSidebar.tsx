@@ -1,10 +1,10 @@
 "use client";
 
+import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useAppStore";
+import { AlertTriangle, Bug, ChevronLeft, ChevronRight, Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Bug, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
-import { useAppStore } from "@/store/useAppStore";
-import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -40,7 +40,7 @@ export function AppSidebar() {
               )}
             >
               <Icon
-                className={cn("shrink-0", isActive ? "text-sidebar-primary" : "")}
+                className={cn("shrink-0", isActive ? "text-sidebar-accent-foreground" : "")}
                 size={18}
                 aria-hidden="true"
               />
