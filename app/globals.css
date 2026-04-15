@@ -1,0 +1,192 @@
+/* Satoshi font is loaded via <link> in app/layout.tsx — not here.
+   External @import url() cannot appear after @import "tailwindcss"
+   because PostCSS inlines Tailwind before passing the file on. */
+
+@import "tailwindcss";
+
+/* 3. ShadCN CSS variables + DasTech design tokens */
+@theme {
+  /* --- Font --- */
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+
+  /* --- Primary: Clementine (orange) --- */
+  --color-primary-clementine-900: #dd6000;
+  --color-primary-clementine-800: #e0701a;
+  --color-primary-clementine-700: #e48033;
+  --color-primary-clementine-600: #e7904d;
+  --color-primary-clementine-500: #eba066;
+  --color-primary-clementine-400: #eeaf80;
+  --color-primary-clementine-300: #f1bf99;
+  --color-primary-clementine-200: #f5cfb2;
+  --color-primary-clementine-100: #f8dfcc;
+  --color-primary-clementine-50: #fcefe5;
+
+  /* --- Primary: Shuttle Gray (neutral) --- */
+  --color-primary-shuttle-gray-950: #667085;
+  --color-primary-shuttle-gray-900: #54565b;
+  --color-primary-shuttle-gray-800: #65676b;
+  --color-primary-shuttle-gray-700: #76787c;
+  --color-primary-shuttle-gray-600: #87898c;
+  --color-primary-shuttle-gray-500: #989a9d;
+  --color-primary-shuttle-gray-400: #a9aaad;
+  --color-primary-shuttle-gray-300: #bbbbbd;
+  --color-primary-shuttle-gray-200: #ccccce;
+  --color-primary-shuttle-gray-100: #ddddde;
+
+  /* --- Primary: Lochmara (blue) --- */
+  --color-primary-lochmara-900: #0096db;
+  --color-primary-lochmara-800: #1aa1df;
+  --color-primary-lochmara-700: #33abe2;
+  --color-primary-lochmara-600: #4db6e6;
+  --color-primary-lochmara-500: #66c0e9;
+  --color-primary-lochmara-400: #80cbec;
+  --color-primary-lochmara-300: #99d5f0;
+  --color-primary-lochmara-200: #b3e0f3;
+  --color-primary-lochmara-100: #d9f0fb;
+
+  /* --- Primary: Vida Loca (green, success) --- */
+  --color-primary-vida-loca-900: #66bc29;
+  --color-primary-vida-loca-50: #f4ffec;
+
+  /* --- Secondary: Buttercup (yellow, warning) --- */
+  --color-secondary-buttercup-900: #f5b324;
+  --color-secondary-buttercup-100: #fdf0d3;
+
+  /* --- Secondary: Ecstacy (amber-orange, suspended) --- */
+  --color-secondary-ecstacy-900: #f68c23;
+  --color-secondary-ecstacy-100: #fde8d3;
+
+  /* --- Secondary: Background scale --- */
+  --color-secondary-background-900: #f0f0f0;
+  --color-secondary-background-250: #f9fafb;
+  --color-secondary-background-200: #fafafa;
+  --color-secondary-background-150: #eaecf0;
+  --color-secondary-background-100: #fafafa;
+  --color-secondary-background-50: #fdfdfd;
+
+  /* --- Text tokens --- */
+  --color-txt-neutral-900: #4d4d4d;
+  --color-txt-neutral-600: #666666;
+  --color-txt-neutral-100: #f2f2f2;
+  --color-txt-shuttle-gray-900: #54565b;
+  --color-txt-shuttle-gray-600: #87898c;
+  --color-txt-shuttle-gray-100: #ddddde;
+
+  /* --- Campaign / incident status tokens --- */
+  --color-status-verified: #66bc29;
+  --color-status-verified-bg: #f4ffec;
+  --color-status-pending: #f5b324;
+  --color-status-pending-bg: #fdf0d3;
+  --color-status-in-progress: #0096db;
+  --color-status-in-progress-bg: #d9f0fb;
+  --color-status-failed: #dc2626;
+  --color-status-failed-bg: #fef2f2;
+  --color-status-rejected: #dc2626;
+  --color-status-rejected-bg: #fef2f2;
+  --color-status-suspended: #f68c23;
+  --color-status-suspended-bg: #fde8d3;
+  --color-status-expired: #667085;
+  --color-status-expired-bg: #f9fafb;
+  --color-status-unknown: #667085;
+  --color-status-unknown-bg: #f9fafb;
+  --color-status-error: #dc2626;
+  --color-status-error-bg: #fef2f2;
+  --color-status-warning: #f5b324;
+  --color-status-warning-bg: #fdf0d3;
+  --color-status-success: #66bc29;
+  --color-status-success-bg: #f4ffec;
+
+  /* --- Alert border tokens --- */
+  --color-bdr-alert-error: #fca5a5;
+  --color-bdr-alert-warning: #fde68a;
+  --color-bdr-alert-success: #bbf7d0;
+  --color-bdr-alert-brand: #eba066;
+  --color-bdr-alert-gray: #e5e7eb;
+
+  /* --- Sidebar tokens --- */
+  --color-sidebar: #f9fafb;
+  --color-sidebar-foreground: #54565b;
+  --color-sidebar-primary: #dd6000;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: #fcefe5;
+  --color-sidebar-accent-foreground: #dd6000;
+  --color-sidebar-border: #eaecf0;
+  --color-sidebar-ring: #dd6000;
+
+  /* --- ShadCN semantic color aliases (hsl-based CSS vars, resolved below) --- */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  /* --- Border radius --- */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* --- Shadows --- */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-focus-clementine: 0 0 0 3px rgb(221 96 0 / 0.25);
+  --shadow-focus-neutral: 0 0 0 3px rgb(84 86 91 / 0.25);
+}
+
+/* 4. ShadCN CSS variable values */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 22 100% 43%;          /* Clementine 900 #dd6000 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 22 100% 43%;             /* Clementine 900 */
+    --radius: 0.5rem;
+  }
+}
+
+/* 5. Base resets — all rules expressed as Tailwind utilities via @apply */
+@layer base {
+  * {
+    @apply border-border box-border;
+  }
+
+  html {
+    @apply h-full;
+  }
+
+  body {
+    @apply min-h-full bg-background text-foreground font-sans antialiased;
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+}

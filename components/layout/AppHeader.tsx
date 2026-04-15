@@ -1,0 +1,48 @@
+import { Button } from "@/components/ui/button";
+import { auth, signOut } from "@/lib/auth";
+import Link from "next/link";
+
+export async function AppHeader() {
+  const session = await auth();
+
+  return (
+    <header className="sticky top-0 z-50 bg-primary-shuttle-gray-900 shadow-xs">
+      <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+        {/* Logo */}
+        <Link href="/" aria-label="Home">
+          <img
+            src="/das-logo.png"
+            alt="DAS Technology"
+            className="h-10 w-auto"
+          />
+        </Link>
+
+        {/* User / sign-out */}
+        <div className="flex items-center gap-3">
+          {session?.user && (
+            <>
+              <span className="hidden text-xs text-txt-neutral-100 sm:block">
+                {session.user.email}
+              </span>
+              <form
+                action={async () => {
+                  "use server";
+                  await signOut({ redirectTo: "/login" });
+                }}
+              >
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  className="text-txt-neutral-100 hover:bg-primary-shuttle-gray-800 hover:text-white"
+                >
+                  Sign out
+                </Button>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}

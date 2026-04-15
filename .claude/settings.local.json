@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --app --no-tailwind --no-src-dir --import-alias \"@/*\" --yes)",
+      "Bash(npm install *)",
+      "Bash(npx shadcn@latest add button card badge input label skeleton table dialog dropdown-menu select separator tooltip --yes)",
+      "Bash(npm uninstall *)",
+      "Bash(npx tsc *)",
+      "Bash(node -e \"const z = require\\('zod'\\); console.log\\(z.version || 'no version field'\\); const s = z.object\\({d: z.date\\(\\)}\\); console.log\\(JSON.stringify\\(Object.keys\\(s.shape.d._def\\)\\)\\)\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/zod/package.json'\\).version\\)\")",
+      "Bash(npx next *)",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); print\\(data[0]['text']\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(npm run *)"
+    ]
+  }
+}
