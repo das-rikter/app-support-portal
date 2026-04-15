@@ -1,3 +1,4 @@
+import { SidebarToggle } from "@/components/layout/SidebarToggle";
 import { Button } from "@/components/ui/button";
 import { auth, signOut } from "@/lib/auth";
 import { LogOut } from "lucide-react";
@@ -8,15 +9,18 @@ export async function AppHeader() {
 
   return (
     <header className="sticky top-0 z-50 bg-sidebar shadow-xs">
-      <div className="flex items-center justify-between px-4 py-3 sm:px-6">
-        {/* Logo */}
-        <Link href="/" aria-label="Home">
-          <img
-            src="/das-logo.png"
-            alt="DAS Technology"
-            className="h-10 w-auto"
-          />
-        </Link>
+      <div className="flex items-center justify-between px-2 py-3">
+        {/* Sidebar toggle + Logo */}
+        <div className="flex items-center gap-2">
+          <SidebarToggle />
+          <Link href="/" aria-label="Home">
+            <img
+              src="/das-logo.png"
+              alt="DAS Technology"
+              className="h-10 w-auto pl-4"
+            />
+          </Link>
+        </div>
 
         {/* User / sign-out */}
         <div className="flex items-center gap-3">

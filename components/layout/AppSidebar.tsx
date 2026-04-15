@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
-import { AlertTriangle, Bug, ChevronLeft, ChevronRight, Home } from "lucide-react";
+import { AlertTriangle, Bug, Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -32,6 +32,7 @@ export function AppSidebar() {
               key={href}
               href={href}
               title={!isSidebarOpen ? label : undefined}
+              onClick={() => { if (isSidebarOpen) toggleSidebar(); }}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive
@@ -52,20 +53,7 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Collapse / expand toggle */}
-      <div className="border-t border-sidebar-border p-2">
-        <button
-          onClick={toggleSidebar}
-          aria-label={isSidebarOpen ? "Collapse navigation" : "Expand navigation"}
-          className="flex w-full items-center justify-center rounded-md px-3 py-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-        >
-          {isSidebarOpen ? (
-            <ChevronLeft size={18} aria-hidden="true" />
-          ) : (
-            <ChevronRight size={18} aria-hidden="true" />
-          )}
-        </button>
-      </div>
+
     </aside>
   );
 }

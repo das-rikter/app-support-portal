@@ -19,7 +19,7 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   devtools(
     (set) => ({
-      isSidebarOpen: true,
+      isSidebarOpen: false,
       notifications: [],
 
       toggleSidebar: () =>
