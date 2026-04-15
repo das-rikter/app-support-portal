@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef } from 'react';
-import { useBugReportStore } from '@/store/useBugReportStore';
 import { parseMainCSV, parseWeeklyCSV } from '@/lib/csvParser';
+import { useBugReportStore } from '@/store/useBugReportStore';
+import { useRef } from 'react';
 
 const uploadSvg = (
   <svg
@@ -102,7 +102,7 @@ export function DashboardToolbar() {
   const mainBtnClass = `upload-btn upload-btn-weekly${mainLoading ? ' loading' : ''}${uploadState.mainPhase === 'staged' ? ' success' : ''}`;
 
   return (
-    <div className="flex items-center gap-3 flex-wrap mb-6">
+    <div className="flex items-center gap-3 flex-wrap mb-6 mt-6">
       <label className={weeklyBtnClass} title="Upload your weekly bug CSV export">
         {uploadSvg}
         {weeklyBtnLabel()}
