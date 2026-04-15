@@ -28,7 +28,7 @@ export default function WeeklyBugReportPage() {
         <CardContent>
           <DashboardToolbar />
           <NavTabs />
-          <div className="max-w-360 mx-auto px-6 flex flex-col gap-8 pb-16 pt-8">
+          <div className="mx-auto px-1 flex flex-col gap-8 pb-16 pt-8">
             <KpiSection />
             <BugsByProjectChart />
             <PriorityCharts />
