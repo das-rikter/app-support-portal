@@ -104,11 +104,11 @@
   --color-bdr-alert-gray: #e5e7eb;
 
   /* --- Sidebar tokens --- */
-  --color-sidebar: #f9fafb;
-  --color-sidebar-foreground: #54565b;
+  --color-sidebar: rgb(34, 36, 37);
+  --color-sidebar-foreground: #ffffff;
   --color-sidebar-primary: #dd6000;
   --color-sidebar-primary-foreground: #ffffff;
-  --color-sidebar-accent: #fcefe5;
+  --color-sidebar-accent: #dd6000;
   --color-sidebar-accent-foreground: #dd6000;
   --color-sidebar-border: #eaecf0;
   --color-sidebar-ring: #dd6000;
@@ -155,7 +155,8 @@
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 22 100% 43%;          /* Clementine 900 #dd6000 */
+    --primary: 22 100% 43%;
+    /* Clementine 900 #dd6000 */
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
@@ -167,7 +168,8 @@
     --destructive-foreground: 0 0% 98%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 22 100% 43%;             /* Clementine 900 */
+    --ring: 22 100% 43%;
+    /* Clementine 900 */
     --radius: 0.5rem;
   }
 }
