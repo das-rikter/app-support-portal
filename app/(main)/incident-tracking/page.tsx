@@ -18,8 +18,8 @@ export default function IncidentTrackingPage() {
     <>
       <div className="space-y-6">
         <PageHeader
-          title="Incident Report"
-          description="Monitor and manage incident reports."
+          title="Incident Tracking"
+          description="Monitor and manage active incidents."
         />
         <Card>
           <CardContent>
