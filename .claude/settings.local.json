@@ -16,7 +16,8 @@
       "Bash(docker info *)",
       "Bash(bash deploy.sh)",
       "Bash(az acr *)",
-      "Bash(az containerapp *)"
+      "Bash(az containerapp *)",
+      "Bash(ls c:/git/app-support-portal/lib/incident* c:/git/app-support-portal/types/incident* c:/git/app-support-portal/store/useIncident*)"
     ]
   }
 }

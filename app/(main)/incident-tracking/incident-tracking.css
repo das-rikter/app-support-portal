@@ -1,0 +1,211 @@
+/* ============================================================
+   INCIDENT DASHBOARD DESIGN TOKENS (light only)
+   ============================================================ */
+:root {
+  --id-bg:           #f4f5f7;
+  --id-bg2:          #ebedf1;
+  --id-surface:      #ffffff;
+  --id-surface2:     #f7f8fa;
+  --id-text:         #1a1d23;
+  --id-muted:        #6b7280;
+  --id-border:       rgba(20,24,32,.09);
+  --id-accent:       #d66a06;
+  --id-accent2:      #f1a24b;
+  --id-accent-bg:    rgba(214,106,6,.10);
+  --id-blue:         #3b82f6;
+  --id-blue-soft:    rgba(59,130,246,.12);
+  --id-green:        #16a34a;
+  --id-green-soft:   rgba(22,163,74,.12);
+  --id-warn:         #d97706;
+  --id-warn-soft:    rgba(217,119,6,.12);
+  --id-danger:       #dc2626;
+  --id-danger-soft:  rgba(220,38,38,.12);
+  --id-shadow-sm:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --id-shadow:       0 4px 16px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.05);
+  --id-r:            16px;
+}
+
+/* ============================================================
+   KPI CARDS
+   ============================================================ */
+.id-kpi-card {
+  background: var(--id-surface);
+  border: 1px solid var(--id-border);
+  border-radius: var(--id-r);
+  padding: 20px;
+  box-shadow: var(--id-shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.id-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: var(--id-r) var(--id-r) 0 0;
+}
+
+.id-kpi-card[data-accent="accent"]::before  { background: linear-gradient(90deg, var(--id-accent), var(--id-accent2)); }
+.id-kpi-card[data-accent="blue"]::before    { background: var(--id-blue); }
+.id-kpi-card[data-accent="green"]::before   { background: var(--id-green); }
+.id-kpi-card[data-accent="warn"]::before    { background: var(--id-warn); }
+.id-kpi-card[data-accent="danger"]::before  { background: var(--id-danger); }
+
+/* ============================================================
+   SEVERITY PILLS
+   ============================================================ */
+.id-sev {
+  display: inline-flex;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.id-sev-p1 { background: var(--id-danger-soft);  color: var(--id-danger); }
+.id-sev-p2 { background: var(--id-warn-soft);    color: var(--id-warn); }
+.id-sev-p3 { background: var(--id-blue-soft);    color: var(--id-blue); }
+.id-sev-p4 { background: var(--id-green-soft);   color: var(--id-green); }
+
+/* ============================================================
+   CHIP BADGES
+   ============================================================ */
+.id-chip {
+  display: inline-flex;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.id-chip-internal { background: var(--id-accent-bg);              color: var(--id-accent); }
+.id-chip-external { background: var(--id-blue-soft);              color: var(--id-blue); }
+.id-chip-yes      { background: var(--id-green-soft);             color: var(--id-green); }
+.id-chip-no       { background: rgba(107,114,128,.12);            color: var(--id-muted); }
+.id-chip-na       { background: rgba(107,114,128,.08);            color: var(--id-muted); }
+
+/* ============================================================
+   CARD HEADER
+   ============================================================ */
+.id-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 18px 20px 0;
+}
+
+.id-card-badge {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  background: var(--id-accent-bg);
+  color: var(--id-accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   PLOT AREAS
+   ============================================================ */
+.id-plot-area        { height: 280px; }
+.id-plot-area.tall   { height: 320px; }
+.id-plot-area.short  { height: 220px; }
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+.id-table-wrap {
+  max-height: 480px;
+  overflow: auto;
+}
+
+.id-table-wrap table { width: 100%; border-collapse: collapse; }
+
+.id-table-wrap th {
+  position: sticky;
+  top: 0;
+  background: var(--id-surface2);
+  z-index: 2;
+  padding: 10px 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--id-muted);
+  font-weight: 700;
+  text-align: left;
+  border-bottom: 1px solid var(--id-border);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.id-table-wrap th:hover { color: var(--id-text); }
+
+.id-table-wrap td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--id-border);
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.id-table-wrap tr:last-child td { border-bottom: none; }
+.id-table-wrap tr:hover td      { background: var(--id-surface2); }
+
+/* ============================================================
+   MINI LIST (summary grid)
+   ============================================================ */
+.id-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.id-mini-list { display: flex; flex-direction: column; gap: 8px; }
+
+.id-mini-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.id-mini-bar-wrap {
+  flex: 1;
+  margin: 0 10px;
+  height: 5px;
+  background: var(--id-bg2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.id-mini-bar {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--id-accent);
+}
+
+.id-mini-val {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--id-text);
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ============================================================
+   OUTAGE DURATION (monospace)
+   ============================================================ */
+.id-outage-dur {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 500;
+}
