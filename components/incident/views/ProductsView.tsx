@@ -8,7 +8,7 @@ import { parseOutageHrs, chartBase } from '@/lib/incidentUtils';
 function calculateLeftMargin(names: string[]): number {
   if (!names.length) return 50;
   const maxLength = Math.max(...names.map((n) => n.length));
-  return Math.max(maxLength * 8 + 20, 60);
+  return Math.max(maxLength * 10 + 20, 60);
 }
 
 function truncateName(name: string, maxLen = 28): string {

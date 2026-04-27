@@ -7,7 +7,15 @@ import { parseOutageHrs, MONTH_ORDER, CHART_COLORS, chartBase } from '@/lib/inci
 
 const c = CHART_COLORS;
 const ALERT_SRC_COLORS = [c.g, c.b, c.b2, c.o, c.o2, c.y, c.r, c.p, '#94a3b8', '#64748b', '#94a3b8', '#cbd5e1'];
-const MTTR_COLORS = [c.b, c.b2, c.b3, c.o, c.o2, '#94a3b8', '#64748b', '#cbd5e1'];
+
+function truncateName(name: string, maxLen = 28): string {
+  return name.length <= maxLen ? name : name.slice(0, maxLen - 1) + '…';
+}
+
+function calcLeftMargin(names: string[]): number {
+  if (!names.length) return 50;
+  return Math.max(Math.max(...names.map((n) => n.length)) * 10 + 20, 60);
+}
 
 export function ProcessView() {
   const filtered = useIncidentStore((s) => s.filtered);
@@ -109,21 +117,38 @@ export function ProcessView() {
       mttrByProd[d.product].total += parseOutageHrs(d.downtime);
       mttrByProd[d.product].n++;
     });
+    // Sort ascending so the highest MTTR sits at the top; drop zero-avg entries
     const entries = Object.entries(mttrByProd)
-      .map(([p, v]) => [p, v.total / v.n] as [string, number])
-      .sort((a, b) => b[1] - a[1]);
+      .map(([p, v]) => [p, +(v.total / v.n).toFixed(1)] as [string, number])
+      .filter(([, v]) => v > 0)
+      .sort((a, b) => a[1] - b[1]);
+    const truncated = entries.map(([name]) => truncateName(name));
+    const autoMargin = calcLeftMargin(truncated);
     return {
       data: [{
         type: 'bar',
-        x: entries.map((e) => e[0]),
-        y: entries.map((e) => +e[1].toFixed(1)),
-        marker: { color: entries.map((_, i) => MTTR_COLORS[i] || '#94a3b8') },
-        hovertemplate: '%{x}: %{y}h avg<extra></extra>',
+        orientation: 'h',
+        x: entries.map(([, v]) => v),
+        y: truncated,
+        customdata: entries.map(([name]) => name),
+        text: entries.map(([, v]) => `${v}h`),
+        textposition: 'outside',
+        textfont: { size: 11, color: 'var(--id-muted)' },
+        cliponaxis: false,
+        marker: { color: entries.map((_, i) => i === entries.length - 1 ? 'var(--id-blue)' : 'var(--id-blue-soft)') },
+        hovertemplate: '%{customdata}: %{x}h avg resolution<extra></extra>',
       }],
       layout: {
-        ...chartBase({ l: 50, r: 10, t: 10, b: 90 }),
-        xaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)', size: 11 }, zeroline: false, tickangle: -35 },
-        yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false, ticksuffix: 'h' },
+        ...chartBase({ l: autoMargin, r: 80, t: 10, b: 40 }),
+        xaxis: {
+          type: 'log',
+          gridcolor: 'var(--id-border)',
+          tickfont: { color: 'var(--id-muted)' },
+          zeroline: false,
+          ticksuffix: 'h',
+          automargin: true,
+        },
+        yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false, automargin: true },
       },
     };
   }, [filtered]);
@@ -208,11 +233,11 @@ export function ProcessView() {
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Avg Resolution Time by Product</div>
-              <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Mean time to resolve (hours)</div>
+              <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Mean time to resolve · log scale</div>
             </div>
             <span className="id-card-badge">MTTR</span>
           </div>
-          <PlotlyChart data={mttrChart.data} layout={mttrChart.layout} className="id-plot-area" />
+          <PlotlyChart data={mttrChart.data} layout={mttrChart.layout} className="id-plot-area tall" />
         </div>
       </div>
     </div>
