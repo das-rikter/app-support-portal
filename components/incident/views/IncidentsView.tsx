@@ -2,17 +2,18 @@
 
 import { useMemo, useState } from 'react';
 import { useIncidentStore } from '@/store/useIncidentStore';
-import { parseOutageHrs } from '@/lib/incidentUtils';
+import { parseOutageHrs, isMultiApp } from '@/lib/incidentUtils';
 
 export function IncidentsView() {
   const filtered = useIncidentStore((s) => s.filtered);
+  const singleApp = useMemo(() => filtered.filter((d) => !isMultiApp(d.product)), [filtered]);
   const [search, setSearch] = useState('');
   const [sortCol, setSortCol] = useState<'date' | 'product' | 'severity' | 'downtime'>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const rows = useMemo(() => {
     const q = search.toLowerCase();
-    let r = filtered.filter(
+    let r = singleApp.filter(
       (d) =>
         !q ||
         d.title.toLowerCase().includes(q) ||
@@ -31,7 +32,7 @@ export function IncidentsView() {
       return 0;
     });
     return r;
-  }, [filtered, search, sortCol, sortDir]);
+  }, [singleApp, search, sortCol, sortDir]);
 
   const sevClass: Record<string, string> = {
     P1: 'id-sev id-sev-p1', P2: 'id-sev id-sev-p2', P3: 'id-sev id-sev-p3', P4: 'id-sev id-sev-p4',

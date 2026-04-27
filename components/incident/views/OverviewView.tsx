@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useIncidentStore } from '@/store/useIncidentStore';
 import { PlotlyChart } from '@/components/incident/PlotlyChart';
-import { parseOutageHrs, MONTH_ORDER, CHART_COLORS, chartBase } from '@/lib/incidentUtils';
+import { parseOutageHrs, isMultiApp, MONTH_ORDER, CHART_COLORS, chartBase } from '@/lib/incidentUtils';
 
 const c = CHART_COLORS;
 const CAUSE_COLORS = [c.o, c.o2, c.o3, c.b, c.b2, c.b3, c.g, c.y, c.r, c.p, '#94a3b8', '#64748b'];
@@ -22,9 +22,11 @@ function calculateLeftMargin(names: string[]): number {
 export function OverviewView() {
   const filtered = useIncidentStore((s) => s.filtered);
   const incidents = useIncidentStore((s) => s.incidents);
-  
-  const ALL_MONTHS = useMemo(() => 
-    [...new Set(incidents.map((d) => d.month))].sort(
+
+  const singleApp = useMemo(() => filtered.filter((d) => !isMultiApp(d.product)), [filtered]);
+
+  const ALL_MONTHS = useMemo(() =>
+    [...new Set(incidents.filter((d) => !isMultiApp(d.product)).map((d) => d.month))].sort(
       (a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b)
     ),
     [incidents]
@@ -34,11 +36,11 @@ export function OverviewView() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   // KPIs
-  const total = filtered.length;
-  const p1Count = filtered.filter((d) => d.sev === 'P1').length;
-  const totalHrs = filtered.reduce((s, d) => s + parseOutageHrs(d.downtime), 0);
-  const alertPct = Math.round((filtered.filter((d) => d.alerted === 1).length / Math.max(total, 1)) * 100);
-  const reoccurPct = Math.round((filtered.filter((d) => d.reoccurring === 1).length / Math.max(total, 1)) * 100);
+  const total = singleApp.length;
+  const p1Count = singleApp.filter((d) => d.sev === 'P1').length;
+  const totalHrs = singleApp.reduce((s, d) => s + parseOutageHrs(d.downtime), 0);
+  const alertPct = Math.round((singleApp.filter((d) => d.alerted === 1).length / Math.max(total, 1)) * 100);
+  const reoccurPct = Math.round((singleApp.filter((d) => d.reoccurring === 1).length / Math.max(total, 1)) * 100);
 
   // Monthly trend chart
   const monthlyChart = useMemo(() => {
@@ -57,7 +59,7 @@ export function OverviewView() {
       'September': 8, 'October': 9, 'November': 10, 'December': 11
     };
 
-    // Count incidents by month from actual data
+    // Count all incidents by month (single-app + multi-app)
     const byMonth: Record<string, number> = {};
     filtered.forEach((d) => {
       const month = d.month;
@@ -93,7 +95,7 @@ export function OverviewView() {
   // Downtime by product chart
   const downtimeChart = useMemo(() => {
     const dtByProd: Record<string, number> = {};
-    filtered.forEach((d) => {
+    singleApp.forEach((d) => {
       dtByProd[d.product] = (dtByProd[d.product] || 0) + parseOutageHrs(d.downtime);
     });
     const entries = Object.entries(dtByProd).sort((a, b) => b[1] - a[1]);
@@ -118,12 +120,12 @@ export function OverviewView() {
         yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false, automargin: true },
       },
     };
-  }, [filtered]);
+  }, [singleApp]);
 
   // Product volume chart
   const productVolChart = useMemo(() => {
     const byProd: Record<string, number> = {};
-    filtered.forEach((d) => { byProd[d.product] = (byProd[d.product] || 0) + 1; });
+    singleApp.forEach((d) => { byProd[d.product] = (byProd[d.product] || 0) + 1; });
     const prods = Object.entries(byProd).sort((a, b) => b[1] - a[1]);
     const autoMargin = calculateLeftMargin(prods.map((p) => p[0]));
     return {
@@ -146,12 +148,12 @@ export function OverviewView() {
         yaxis: { automargin: true },
       },
     };
-  }, [filtered]);
+  }, [singleApp]);
 
   // Root causes chart
   const causesChart = useMemo(() => {
     const byCause: Record<string, number> = {};
-    filtered.forEach((d) => {
+    singleApp.forEach((d) => {
       if (d.cause) byCause[d.cause] = (byCause[d.cause] || 0) + 1;
     });
     const causes = Object.entries(byCause).sort((a, b) => b[1] - a[1]).slice(0, 12);
@@ -169,12 +171,12 @@ export function OverviewView() {
         yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false },
       },
     };
-  }, [filtered]);
+  }, [singleApp]);
 
   // Table rows
   const tableRows = useMemo(() => {
     const q = search.toLowerCase();
-    let rows = filtered.filter(
+    let rows = singleApp.filter(
       (d) =>
         !q ||
         d.title.toLowerCase().includes(q) ||
@@ -194,7 +196,7 @@ export function OverviewView() {
       return 0;
     });
     return rows;
-  }, [filtered, search, sortCol, sortDir]);
+  }, [singleApp, search, sortCol, sortDir]);
 
   const sevClass: Record<string, string> = {
     P1: 'id-sev id-sev-p1', P2: 'id-sev id-sev-p2', P3: 'id-sev id-sev-p3', P4: 'id-sev id-sev-p4',
