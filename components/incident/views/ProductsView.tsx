@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useIncidentStore } from '@/store/useIncidentStore';
 import { PlotlyChart } from '@/components/incident/PlotlyChart';
-import { parseOutageHrs, chartBase } from '@/lib/incidentUtils';
+import { parseOutageHrs, isMultiApp, chartBase } from '@/lib/incidentUtils';
 
 function calculateLeftMargin(names: string[]): number {
   if (!names.length) return 50;
@@ -17,11 +17,12 @@ function truncateName(name: string, maxLen = 28): string {
 
 export function ProductsView() {
   const filtered = useIncidentStore((s) => s.filtered);
+  const singleApp = useMemo(() => filtered.filter((d) => !isMultiApp(d.product)), [filtered]);
 
   // Outage hours by product chart
   const outageHoursChart = useMemo(() => {
     const byProdHrs: Record<string, number> = {};
-    filtered.forEach((d) => {
+    singleApp.forEach((d) => {
       byProdHrs[d.product] = (byProdHrs[d.product] || 0) + parseOutageHrs(d.downtime);
     });
     // Sort ascending so largest bar is at the top; drop zero-hour entries (invalid on log scale)
@@ -57,16 +58,16 @@ export function ProductsView() {
       },
       ph,
     };
-  }, [filtered]);
+  }, [singleApp]);
 
   // Ownership stacked chart
   const ownershipChart = useMemo(() => {
     // Sort ascending by total so the highest-incident product sits at the top
-    const sorted = [...new Set(filtered.map((d) => d.product))]
+    const sorted = [...new Set(singleApp.map((d) => d.product))]
       .map((p) => ({
         name: p,
-        internal: filtered.filter((d) => d.product === p && d.dasCaused === 1).length,
-        external: filtered.filter((d) => d.product === p && d.dasCaused === 0).length,
+        internal: singleApp.filter((d) => d.product === p && d.dasCaused === 1).length,
+        external: singleApp.filter((d) => d.product === p && d.dasCaused === 0).length,
       }))
       .sort((a, b) => (a.internal + a.external) - (b.internal + b.external));
 
@@ -90,24 +91,24 @@ export function ProductsView() {
         yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)', size: 11 }, zeroline: false, automargin: true },
       },
     };
-  }, [filtered]);
+  }, [singleApp]);
 
   // Summary data
   const summaryData = useMemo(() => {
     const byProdCnt: Record<string, number> = {};
-    filtered.forEach((d) => { byProdCnt[d.product] = (byProdCnt[d.product] || 0) + 1; });
+    singleApp.forEach((d) => { byProdCnt[d.product] = (byProdCnt[d.product] || 0) + 1; });
     const topCnt = Object.entries(byProdCnt).sort((a, b) => b[1] - a[1]);
     const maxCnt = topCnt[0]?.[1] || 1;
 
     const byProdHrs: Record<string, number> = {};
-    filtered.forEach((d) => {
+    singleApp.forEach((d) => {
       byProdHrs[d.product] = (byProdHrs[d.product] || 0) + parseOutageHrs(d.downtime);
     });
     const ph = Object.entries(byProdHrs).sort((a, b) => b[1] - a[1]);
     const maxHrs = ph[0]?.[1] || 1;
 
     const sevByProd: Record<string, { P1: number; P2: number; P3: number; P4: number }> = {};
-    filtered.forEach((d) => {
+    singleApp.forEach((d) => {
       if (!sevByProd[d.product]) sevByProd[d.product] = { P1: 0, P2: 0, P3: 0, P4: 0 };
       sevByProd[d.product][d.sev]++;
     });
@@ -115,7 +116,7 @@ export function ProductsView() {
     const p1List = Object.entries(sevByProd).sort((a, b) => (b[1].P1 || 0) - (a[1].P1 || 0));
 
     return { topCnt, maxCnt, ph, maxHrs, p1List, maxP1 };
-  }, [filtered]);
+  }, [singleApp]);
 
   return (
     <div>

@@ -1,5 +1,9 @@
 import type { Incident } from '@/types/incident';
 
+export function isMultiApp(product: string): boolean {
+  return product.includes('&') || product.includes(',');
+}
+
 export function parseOutageHrs(s: string): number {
   if (!s) return 0;
   const cleaned = s.replace(/\s/g, '').toLowerCase();

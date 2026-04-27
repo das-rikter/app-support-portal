@@ -22,4 +22,4 @@ export interface Incident {
   postmortem: 'Yes' | 'No' | 'N/A';
 }
 
-export type IncidentView = 'overview' | 'products' | 'process' | 'incidents';
+export type IncidentView = 'overview' | 'products' | 'process' | 'incidents' | 'multi-app';
