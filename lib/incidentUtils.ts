@@ -2,8 +2,26 @@ import type { Incident } from '@/types/incident';
 
 export function parseOutageHrs(s: string): number {
   if (!s) return 0;
-  const p = s.replace(/\s/g, '').split(':');
-  if (p.length >= 2) return parseInt(p[0]) + parseInt(p[1]) / 60;
+  const cleaned = s.replace(/\s/g, '').toLowerCase();
+  const p = cleaned.split(':');
+  if (p.length >= 2) {
+    // HH:MM format
+    const hours = parseInt(p[0]) || 0;
+    const minutes = parseInt(p[1]) || 0;
+    return hours + minutes / 60;
+  } else if (p.length === 1) {
+    // Single value
+    const num = parseFloat(cleaned);
+    if (!isNaN(num)) {
+      if (num > 24) {
+        // Likely minutes
+        return num / 60;
+      } else {
+        // Likely hours
+        return num;
+      }
+    }
+  }
   return 0;
 }
 
@@ -39,16 +57,16 @@ export function chartBase(extraMargin: Record<string, number> = {}): object {
   return {
     paper_bgcolor: 'rgba(0,0,0,0)',
     plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { family: 'inherit', color: '#1a1d23', size: 12 },
+    font: { family: 'inherit', color: 'var(--id-text)', size: 12 },
     margin: { l: 20, r: 20, t: 10, b: 40, ...extraMargin },
     xaxis: {
-      gridcolor: 'rgba(20,24,32,.07)',
-      tickfont: { color: '#6b7280' },
+      gridcolor: 'var(--id-border)',
+      tickfont: { color: 'var(--id-muted)' },
       zeroline: false,
     },
     yaxis: {
-      gridcolor: 'rgba(20,24,32,.07)',
-      tickfont: { color: '#6b7280' },
+      gridcolor: 'var(--id-border)',
+      tickfont: { color: 'var(--id-muted)' },
       zeroline: false,
     },
     showlegend: false,

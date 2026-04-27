@@ -4,24 +4,31 @@ import { useMemo, useState } from 'react';
 import { useIncidentStore } from '@/store/useIncidentStore';
 import { PlotlyChart } from '@/components/incident/PlotlyChart';
 import { parseOutageHrs, MONTH_ORDER, CHART_COLORS, chartBase } from '@/lib/incidentUtils';
-import { INCIDENTS } from '@/lib/incidentData';
-
-const ALL_MONTHS = [...new Set(INCIDENTS.map((d) => d.month))].sort(
-  (a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b)
-);
 
 const c = CHART_COLORS;
 const CAUSE_COLORS = [c.o, c.o2, c.o3, c.b, c.b2, c.b3, c.g, c.y, c.r, c.p, '#94a3b8', '#64748b'];
 
-function fmtDowntime(mins: number): string {
-  if (!mins) return '—';
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return h > 0 ? `${h}h${m > 0 ? ` ${m}m` : ''}` : `${m}m`;
+function fmtDowntime(hhmm: string): string {
+  return hhmm || '—';
+}
+
+function calculateLeftMargin(names: string[]): number {
+  if (!names.length) return 50;
+  const maxLength = Math.max(...names.map((n) => n.length));
+  // ~8 pixels per character, plus 20px padding
+  return Math.max(maxLength * 8 + 20, 60);
 }
 
 export function OverviewView() {
   const filtered = useIncidentStore((s) => s.filtered);
+  const incidents = useIncidentStore((s) => s.incidents);
+  
+  const ALL_MONTHS = useMemo(() => 
+    [...new Set(incidents.map((d) => d.month))].sort(
+      (a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b)
+    ),
+    [incidents]
+  );
   const [search, setSearch] = useState('');
   const [sortCol, setSortCol] = useState<'date' | 'product' | 'severity' | 'outage'>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
@@ -29,27 +36,57 @@ export function OverviewView() {
   // KPIs
   const total = filtered.length;
   const p1Count = filtered.filter((d) => d.sev === 'P1').length;
-  const totalHrs = filtered.reduce((s, d) => s + parseOutageHrs(d.outage), 0);
+  const totalHrs = filtered.reduce((s, d) => s + parseOutageHrs(d.downtime), 0);
   const alertPct = Math.round((filtered.filter((d) => d.alerted === 1).length / Math.max(total, 1)) * 100);
   const reoccurPct = Math.round((filtered.filter((d) => d.reoccurring === 1).length / Math.max(total, 1)) * 100);
 
   // Monthly trend chart
   const monthlyChart = useMemo(() => {
+    const monthNames: Record<string, string> = {
+      'Jan': 'January', 'Feb': 'February', 'Mar': 'March', 'Apr': 'April',
+      'May': 'May', 'Jun': 'June', 'Jul': 'July', 'Aug': 'August',
+      'Sep': 'September', 'Oct': 'October', 'Nov': 'November', 'Dec': 'December',
+      'January': 'January', 'February': 'February', 'March': 'March', 'April': 'April',
+      'June': 'June', 'July': 'July', 'August': 'August',
+      'September': 'September', 'October': 'October', 'November': 'November', 'December': 'December'
+    };
+    const monthSort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthToSort: Record<string, number> = {
+      'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5, 'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11,
+      'January': 0, 'February': 1, 'March': 2, 'April': 3, 'June': 5, 'July': 6, 'August': 7,
+      'September': 8, 'October': 9, 'November': 10, 'December': 11
+    };
+
+    // Count incidents by month from actual data
     const byMonth: Record<string, number> = {};
-    ALL_MONTHS.forEach((m) => { byMonth[m] = 0; });
-    filtered.forEach((d) => { if (byMonth[d.month] !== undefined) byMonth[d.month]++; });
-    const months = Object.keys(byMonth);
-    const counts = Object.values(byMonth);
-    const maxVal = Math.max(...counts);
+    filtered.forEach((d) => {
+      const month = d.month;
+      byMonth[month] = (byMonth[month] || 0) + 1;
+    });
+    
+    // Get unique months and sort by calendar order
+    const monthsInData = Object.keys(byMonth).sort((a, b) => {
+      const aSort = monthToSort[a] ?? -1;
+      const bSort = monthToSort[b] ?? -1;
+      return aSort - bSort;
+    });
+    
+    const months = monthsInData.map(m => monthNames[m] || m);
+    const counts = monthsInData.map(m => byMonth[m] || 0);
+    const maxVal = Math.max(...counts, 0);
+    
     return {
       data: [{
         type: 'bar',
         x: months,
         y: counts,
-        marker: { color: counts.map((v) => (v === maxVal ? c.o : c.o3)), line: { width: 0 } },
+        text: counts.map(String),
+        textposition: 'outside',
+        textfont: { size: 12, color: 'var(--id-text)' },
+        marker: { color: counts.map((v) => (v === maxVal && maxVal > 0 ? 'var(--id-accent)' : 'var(--id-accent2)')), line: { width: 0 } },
         hovertemplate: '%{x}: %{y} incidents<extra></extra>',
       }],
-      layout: { ...chartBase({ l: 40, r: 10, t: 10, b: 40 }) },
+      layout: { ...chartBase({ l: 40, r: 10, t: 30, b: 40 }) },
     };
   }, [filtered]);
 
@@ -57,21 +94,28 @@ export function OverviewView() {
   const downtimeChart = useMemo(() => {
     const dtByProd: Record<string, number> = {};
     filtered.forEach((d) => {
-      dtByProd[d.product] = (dtByProd[d.product] || 0) + d.downtimeMins / 60;
+      dtByProd[d.product] = (dtByProd[d.product] || 0) + parseOutageHrs(d.downtime);
     });
     const entries = Object.entries(dtByProd).sort((a, b) => b[1] - a[1]);
+    const autoMargin = calculateLeftMargin(entries.map((e) => e[0]));
     return {
       data: [{
         type: 'bar',
-        x: entries.map((e) => e[0]),
-        y: entries.map((e) => +e[1].toFixed(1)),
-        marker: { color: entries.map((_, i) => (i === 0 ? c.b : i === 1 ? c.b2 : c.b3)) },
-        hovertemplate: '%{x}: %{y}h downtime<extra></extra>',
+        x: entries.map((e) => +e[1].toFixed(1)),
+        y: entries.map((e) => e[0]),
+        orientation: 'h',
+        text: entries.map((e) => `${e[1].toFixed(1)}h`),
+        texttemplate: '%{text}',
+        textposition: 'outside',
+        textfont: { size: 11, color: 'var(--id-text)' },
+        cliponaxis: false,
+        marker: { color: entries.map((_, i) => (i === 0 ? 'var(--id-blue)' : i === 1 ? 'var(--id-blue-soft)' : 'var(--id-blue-soft)')) },
+        hovertemplate: '%{y}: %{x}h downtime<extra></extra>',
       }],
       layout: {
-        ...chartBase({ l: 50, r: 10, t: 10, b: 90 }),
-        xaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280' }, zeroline: false, tickangle: -35 },
-        yaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280' }, zeroline: false, ticksuffix: 'h' },
+        ...chartBase({ l: autoMargin, r: 80, t: 10, b: 40 }),
+        xaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false, ticksuffix: 'h', automargin: true },
+        yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false, automargin: true },
       },
     };
   }, [filtered]);
@@ -81,16 +125,26 @@ export function OverviewView() {
     const byProd: Record<string, number> = {};
     filtered.forEach((d) => { byProd[d.product] = (byProd[d.product] || 0) + 1; });
     const prods = Object.entries(byProd).sort((a, b) => b[1] - a[1]);
+    const autoMargin = calculateLeftMargin(prods.map((p) => p[0]));
     return {
       data: [{
         type: 'bar',
         orientation: 'h',
         x: prods.map((p) => p[1]),
         y: prods.map((p) => p[0]),
-        marker: { color: prods.map((_, i) => (i === 0 ? c.o : i === 1 ? c.o2 : c.o3)) },
+        text: prods.map((p) => String(p[1])),
+        texttemplate: '%{text}',
+        textposition: 'outside',
+        textfont: { size: 11, color: 'var(--id-text)' },
+        cliponaxis: false,
+        marker: { color: prods.map((_, i) => (i === 0 ? 'var(--id-accent)' : i === 1 ? 'var(--id-accent2)' : 'var(--id-accent-bg)')) },
         hovertemplate: '%{y}: %{x} incidents<extra></extra>',
       }],
-      layout: { ...chartBase({ l: 130, r: 20, t: 10, b: 40 }) },
+      layout: {
+        ...chartBase({ l: autoMargin, r: 80, t: 10, b: 40 }),
+        xaxis: { automargin: true },
+        yaxis: { automargin: true },
+      },
     };
   }, [filtered]);
 
@@ -111,8 +165,8 @@ export function OverviewView() {
       }],
       layout: {
         ...chartBase({ l: 40, r: 10, t: 10, b: 90 }),
-        xaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280', size: 11 }, zeroline: false, tickangle: -35 },
-        yaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280' }, zeroline: false },
+        xaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)', size: 11 }, zeroline: false, tickangle: -35 },
+        yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false },
       },
     };
   }, [filtered]);
@@ -134,7 +188,7 @@ export function OverviewView() {
       if (sortCol === 'date') { va = new Date(a.date); vb = new Date(b.date); }
       else if (sortCol === 'product') { va = a.product; vb = b.product; }
       else if (sortCol === 'severity') { va = ['P1', 'P2', 'P3', 'P4'].indexOf(a.sev); vb = ['P1', 'P2', 'P3', 'P4'].indexOf(b.sev); }
-      else { va = parseOutageHrs(a.outage); vb = parseOutageHrs(b.outage); }
+      else { va = parseOutageHrs(a.downtime); vb = parseOutageHrs(b.downtime); }
       if (va < vb) return sortDir === 'asc' ? -1 : 1;
       if (va > vb) return sortDir === 'asc' ? 1 : -1;
       return 0;
@@ -206,7 +260,7 @@ export function OverviewView() {
 
       {/* Chart Row 1 */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Incidents by Month</div>
@@ -216,7 +270,7 @@ export function OverviewView() {
           </div>
           <PlotlyChart data={monthlyChart.data} layout={monthlyChart.layout} className="id-plot-area" />
         </div>
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Downtime by Product</div>
@@ -230,7 +284,7 @@ export function OverviewView() {
 
       {/* Chart Row 2 */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Incidents by Product</div>
@@ -240,7 +294,7 @@ export function OverviewView() {
           </div>
           <PlotlyChart data={productVolChart.data} layout={productVolChart.layout} className="id-plot-area tall" />
         </div>
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Root Cause Categories</div>
@@ -253,7 +307,7 @@ export function OverviewView() {
       </div>
 
       {/* Incident Log Table */}
-      <div className="bg-white border rounded-2xl overflow-hidden mb-4" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+      <div className="border rounded-2xl overflow-hidden mb-4" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
         <div className="flex justify-between items-center px-5 pt-4 pb-3 gap-3">
           <div>
             <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Incident Log</div>
@@ -277,7 +331,7 @@ export function OverviewView() {
               <option value="date">Date</option>
               <option value="product">Product</option>
               <option value="severity">Severity</option>
-              <option value="outage">Outage hrs</option>
+              <option value="downtime">Downtime hrs</option>
             </select>
             <select
               value={sortDir}
@@ -321,8 +375,8 @@ export function OverviewView() {
                   <td style={{ color: 'var(--id-muted)', fontSize: 12 }}>{d.fn}</td>
                   <td><span className={sevClass[d.sev]}>{d.sev}</span></td>
                   <td style={{ fontSize: 13, maxWidth: 220 }}>{d.title}</td>
-                  <td className="id-outage-dur">{d.outage || '—'}</td>
-                  <td className="id-outage-dur" style={{ color: 'var(--id-blue)' }}>{fmtDowntime(d.downtimeMins)}</td>
+                  <td className="id-outage-dur">{d.incidentLength || '—'}</td>
+                  <td className="id-outage-dur" style={{ color: 'var(--id-blue)' }}>{fmtDowntime(d.downtime)}</td>
                   <td style={{ fontSize: 12, color: 'var(--id-muted)' }}>{d.cause || '—'}</td>
                   <td><span className={d.dasCaused ? 'id-chip id-chip-internal' : 'id-chip id-chip-external'}>{d.dasCaused ? 'Internal' : 'External'}</span></td>
                   <td><span className={d.alerted ? 'id-chip id-chip-yes' : 'id-chip id-chip-no'}>{d.alerted ? 'Yes' : 'No'}</span></td>

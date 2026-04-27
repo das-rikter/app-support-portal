@@ -7,7 +7,7 @@ import { parseOutageHrs } from '@/lib/incidentUtils';
 export function IncidentsView() {
   const filtered = useIncidentStore((s) => s.filtered);
   const [search, setSearch] = useState('');
-  const [sortCol, setSortCol] = useState<'date' | 'product' | 'severity' | 'outage'>('date');
+  const [sortCol, setSortCol] = useState<'date' | 'product' | 'severity' | 'downtime'>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const rows = useMemo(() => {
@@ -25,7 +25,7 @@ export function IncidentsView() {
       if (sortCol === 'date') { va = new Date(a.date); vb = new Date(b.date); }
       else if (sortCol === 'product') { va = a.product; vb = b.product; }
       else if (sortCol === 'severity') { va = ['P1', 'P2', 'P3', 'P4'].indexOf(a.sev); vb = ['P1', 'P2', 'P3', 'P4'].indexOf(b.sev); }
-      else { va = parseOutageHrs(a.outage); vb = parseOutageHrs(b.outage); }
+      else { va = parseOutageHrs(a.downtime); vb = parseOutageHrs(b.downtime); }
       if (va < vb) return sortDir === 'asc' ? -1 : 1;
       if (va > vb) return sortDir === 'asc' ? 1 : -1;
       return 0;
@@ -38,7 +38,7 @@ export function IncidentsView() {
   };
 
   return (
-    <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+    <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
       <div className="flex justify-between items-center px-5 pt-4 pb-3 gap-3">
         <div>
           <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>All Incidents</div>
@@ -62,7 +62,7 @@ export function IncidentsView() {
             <option value="date">Sort: Date</option>
             <option value="product">Sort: Product</option>
             <option value="severity">Sort: Severity</option>
-            <option value="outage">Sort: Outage hrs</option>
+            <option value="downtime">Sort: Downtime hrs</option>
           </select>
           <select
             value={sortDir}
@@ -101,7 +101,7 @@ export function IncidentsView() {
                 <td style={{ color: 'var(--id-muted)', fontSize: 12 }}>{d.fn}</td>
                 <td><span className={sevClass[d.sev]}>{d.sev}</span></td>
                 <td style={{ maxWidth: 240, fontSize: 13 }}>{d.title}</td>
-                <td className="id-outage-dur">{d.outage || '—'}</td>
+                <td className="id-outage-dur">{d.downtime || '—'}</td>
                 <td style={{ color: 'var(--id-muted)', fontSize: 12 }}>{d.cause || '—'}</td>
                 <td><span className={d.dasCaused ? 'id-chip id-chip-internal' : 'id-chip id-chip-external'}>{d.dasCaused ? 'Internal' : 'External'}</span></td>
                 <td><span className={d.alerted ? 'id-chip id-chip-yes' : 'id-chip id-chip-no'}>{d.alerted ? 'Yes' : 'No'}</span></td>

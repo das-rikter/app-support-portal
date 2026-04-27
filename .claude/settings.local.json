@@ -17,7 +17,11 @@
       "Bash(bash deploy.sh)",
       "Bash(az acr *)",
       "Bash(az containerapp *)",
-      "Bash(ls c:/git/app-support-portal/lib/incident* c:/git/app-support-portal/types/incident* c:/git/app-support-portal/store/useIncident*)"
+      "Bash(ls c:/git/app-support-portal/lib/incident* c:/git/app-support-portal/types/incident* c:/git/app-support-portal/store/useIncident*)",
+      "Bash(curl -s --max-time 5 http://localhost:3000 -o /dev/null -w \"HTTP_STATUS:%{http_code}\")",
+      "Bash(curl -s --max-time 3 http://localhost:3000 -o /dev/null -w \"%{http_code}\")",
+      "Bash(taskkill /F /IM node.exe)",
+      "PowerShell(Stop-Process -Name \"node\" -Force -ErrorAction SilentlyContinue)"
     ]
   }
 }

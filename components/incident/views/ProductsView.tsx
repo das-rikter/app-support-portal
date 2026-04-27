@@ -3,9 +3,17 @@
 import { useMemo } from 'react';
 import { useIncidentStore } from '@/store/useIncidentStore';
 import { PlotlyChart } from '@/components/incident/PlotlyChart';
-import { parseOutageHrs, CHART_COLORS, chartBase } from '@/lib/incidentUtils';
+import { parseOutageHrs, chartBase } from '@/lib/incidentUtils';
 
-const c = CHART_COLORS;
+function calculateLeftMargin(names: string[]): number {
+  if (!names.length) return 50;
+  const maxLength = Math.max(...names.map((n) => n.length));
+  return Math.max(maxLength * 8 + 20, 60);
+}
+
+function truncateName(name: string, maxLen = 28): string {
+  return name.length <= maxLen ? name : name.slice(0, maxLen - 1) + '…';
+}
 
 export function ProductsView() {
   const filtered = useIncidentStore((s) => s.filtered);
@@ -14,40 +22,72 @@ export function ProductsView() {
   const outageHoursChart = useMemo(() => {
     const byProdHrs: Record<string, number> = {};
     filtered.forEach((d) => {
-      byProdHrs[d.product] = (byProdHrs[d.product] || 0) + parseOutageHrs(d.outage);
+      byProdHrs[d.product] = (byProdHrs[d.product] || 0) + parseOutageHrs(d.downtime);
     });
-    const ph = Object.entries(byProdHrs).sort((a, b) => b[1] - a[1]);
+    // Sort ascending so largest bar is at the top; drop zero-hour entries (invalid on log scale)
+    const ph = Object.entries(byProdHrs)
+      .filter(([, v]) => v > 0)
+      .sort((a, b) => a[1] - b[1]);
+    const truncatedNames = ph.map(([name]) => truncateName(name));
+    const autoMargin = calculateLeftMargin(truncatedNames);
     return {
       data: [{
         type: 'bar',
         orientation: 'h',
-        x: ph.map((p) => +p[1].toFixed(1)),
-        y: ph.map((p) => p[0]),
-        marker: { color: ph.map((_, i) => (i === 0 ? c.b : i === 1 ? c.b2 : c.b3)) },
-        hovertemplate: '%{y}: %{x} hrs<extra></extra>',
+        x: ph.map(([, v]) => +v.toFixed(1)),
+        y: truncatedNames,
+        customdata: ph.map(([name]) => name),
+        text: ph.map(([, v]) => `${v.toFixed(1)}h`),
+        textposition: 'outside',
+        textfont: { size: 11, color: 'var(--id-muted)' },
+        cliponaxis: false,
+        marker: { color: ph.map((_, i) => (i === ph.length - 1 ? 'var(--id-blue)' : 'var(--id-blue-soft)')) },
+        hovertemplate: '%{customdata}: %{x}h<extra></extra>',
       }],
-      layout: { ...chartBase({ l: 130, r: 20, t: 10, b: 40 }) },
+      layout: {
+        ...chartBase({ l: autoMargin, r: 80, t: 10, b: 40 }),
+        xaxis: {
+          type: 'log',
+          gridcolor: 'var(--id-border)',
+          tickfont: { color: 'var(--id-muted)' },
+          zeroline: false,
+          automargin: true,
+        },
+        yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false, automargin: true },
+      },
       ph,
     };
   }, [filtered]);
 
   // Ownership stacked chart
   const ownershipChart = useMemo(() => {
-    const prodList = [...new Set(filtered.map((d) => d.product))];
-    const internal = prodList.map((p) => filtered.filter((d) => d.product === p && d.dasCaused === 1).length);
-    const external = prodList.map((p) => filtered.filter((d) => d.product === p && d.dasCaused === 0).length);
+    // Sort ascending by total so the highest-incident product sits at the top
+    const sorted = [...new Set(filtered.map((d) => d.product))]
+      .map((p) => ({
+        name: p,
+        internal: filtered.filter((d) => d.product === p && d.dasCaused === 1).length,
+        external: filtered.filter((d) => d.product === p && d.dasCaused === 0).length,
+      }))
+      .sort((a, b) => (a.internal + a.external) - (b.internal + b.external));
+
+    const prodList = sorted.map((p) => truncateName(p.name));
+    const prodListFull = sorted.map((p) => p.name);
+    const internal = sorted.map((p) => p.internal);
+    const external = sorted.map((p) => p.external);
+    const autoMargin = calculateLeftMargin(prodList);
+
     return {
       data: [
-        { type: 'bar', name: 'DAS Caused', x: prodList, y: internal, marker: { color: c.o } },
-        { type: 'bar', name: 'External/Partner', x: prodList, y: external, marker: { color: c.b2 } },
+        { type: 'bar', name: 'DAS Caused', orientation: 'h', y: prodList, x: internal, customdata: prodListFull, marker: { color: 'var(--id-accent)' }, hovertemplate: '%{customdata}: %{x} DAS-caused<extra></extra>' },
+        { type: 'bar', name: 'External/Partner', orientation: 'h', y: prodList, x: external, customdata: prodListFull, marker: { color: 'var(--id-blue)' }, hovertemplate: '%{customdata}: %{x} external<extra></extra>' },
       ],
       layout: {
-        ...chartBase({ l: 40, r: 10, t: 10, b: 90 }),
+        ...chartBase({ l: autoMargin, r: 160, t: 10, b: 40 }),
         barmode: 'stack',
         showlegend: true,
-        legend: { orientation: 'h', y: 1.1, font: { color: '#6b7280', size: 11 } },
-        xaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280', size: 11 }, zeroline: false, tickangle: -35 },
-        yaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280' }, zeroline: false },
+        legend: { orientation: 'v', x: 1.03, y: 0.5, font: { color: 'var(--id-muted)', size: 11 } },
+        xaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)', size: 11 }, zeroline: false, automargin: true },
+        yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)', size: 11 }, zeroline: false, automargin: true },
       },
     };
   }, [filtered]);
@@ -61,7 +101,7 @@ export function ProductsView() {
 
     const byProdHrs: Record<string, number> = {};
     filtered.forEach((d) => {
-      byProdHrs[d.product] = (byProdHrs[d.product] || 0) + parseOutageHrs(d.outage);
+      byProdHrs[d.product] = (byProdHrs[d.product] || 0) + parseOutageHrs(d.downtime);
     });
     const ph = Object.entries(byProdHrs).sort((a, b) => b[1] - a[1]);
     const maxHrs = ph[0]?.[1] || 1;
@@ -81,17 +121,17 @@ export function ProductsView() {
     <div>
       {/* Charts row */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Outage Hours by Product</div>
-              <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Total outage duration concentration</div>
+              <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Total outage duration · log scale</div>
             </div>
             <span className="id-card-badge">Impact</span>
           </div>
           <PlotlyChart data={outageHoursChart.data} layout={outageHoursChart.layout} className="id-plot-area tall" />
         </div>
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Internal vs External Ownership</div>
@@ -106,7 +146,7 @@ export function ProductsView() {
       {/* Summary Grid */}
       <div className="id-summary-grid">
         {/* Incidents by product */}
-        <div className="bg-white border rounded-2xl p-5" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>Incidents by Product</div>
           <div className="id-mini-list">
             {summaryData.topCnt.map(([p, v]) => (
@@ -122,7 +162,7 @@ export function ProductsView() {
         </div>
 
         {/* Outage hours by product */}
-        <div className="bg-white border rounded-2xl p-5" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>Outage Hours by Product</div>
           <div className="id-mini-list">
             {summaryData.ph.map(([p, v]) => (
@@ -138,7 +178,7 @@ export function ProductsView() {
         </div>
 
         {/* P1 incidents by product */}
-        <div className="bg-white border rounded-2xl p-5" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>P1 Incidents by Product</div>
           <div className="id-mini-list">
             {summaryData.p1List.map(([p, s]) => (

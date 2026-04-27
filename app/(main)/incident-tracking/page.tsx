@@ -14,6 +14,9 @@ import './incident-tracking.css';
 
 export default function IncidentTrackingPage() {
   const activeView = useIncidentStore((s) => s.activeView);
+  const incidents = useIncidentStore((s) => s.incidents);
+  const hasData = incidents.length > 0;
+
   return (
     <>
       <div className="space-y-6">
@@ -25,13 +28,26 @@ export default function IncidentTrackingPage() {
           <CardContent>
             <FilterBar />
             <ViewTabs />
-            <QuickStats />
-            <div className="py-4">
-              {activeView === 'overview' && <OverviewView />}
-              {activeView === 'products' && <ProductsView />}
-              {activeView === 'process' && <ProcessView />}
-              {activeView === 'incidents' && <IncidentsView />}
-            </div>
+            {!hasData ? (
+              <div className="border border-dashed rounded-2xl p-12 mt-6 text-center" style={{ borderColor: 'var(--id-border)', background: 'var(--id-surface)' }}>
+                <h2 className="text-xl font-semibold" style={{ color: 'var(--id-text)' }}>
+                  No incident data loaded.
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Upload a CSV file in the filter bar to populate the dashboard. No sample data will be shown until then.
+                </p>
+              </div>
+            ) : (
+              <>
+                <QuickStats />
+                <div className="py-4">
+                  {activeView === 'overview' && <OverviewView />}
+                  {activeView === 'products' && <ProductsView />}
+                  {activeView === 'process' && <ProcessView />}
+                  {activeView === 'incidents' && <IncidentsView />}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
