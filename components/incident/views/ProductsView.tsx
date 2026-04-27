@@ -51,10 +51,11 @@ export function ProductsView() {
     const internal = prodList.map((p) => filtered.filter((d) => d.product === p && d.dasCaused === 1).length);
     const external = prodList.map((p) => filtered.filter((d) => d.product === p && d.dasCaused === 0).length);
     const autoMargin = calculateLeftMargin(prodList);
+
     return {
       data: [
-        { type: 'bar', name: 'DAS Caused', orientation: 'h', y: prodList, x: internal, text: internal, textposition: 'outside', textangle: 0, textfont: { size: 11, color: 'var(--id-text)' }, cliponaxis: false, marker: { color: 'var(--id-accent)' } },
-        { type: 'bar', name: 'External/Partner', orientation: 'h', y: prodList, x: external, text: external, textposition: 'outside', textangle: 0, textfont: { size: 11, color: 'var(--id-text)' }, cliponaxis: false, marker: { color: 'var(--id-blue)' } },
+        { type: 'bar', name: 'DAS Caused', orientation: 'h', y: prodList, x: internal, marker: { color: 'var(--id-accent)' }, hovertemplate: '%{y}: %{x} DAS-caused<extra></extra>' },
+        { type: 'bar', name: 'External/Partner', orientation: 'h', y: prodList, x: external, marker: { color: 'var(--id-blue)' }, hovertemplate: '%{y}: %{x} external<extra></extra>' },
       ],
       layout: {
         ...chartBase({ l: autoMargin, r: 160, t: 10, b: 40 }),

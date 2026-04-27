@@ -14,7 +14,19 @@ function safeSummary(s: string): string {
 
 function parseCSVRaw(text: string, requiredField?: string): Record<string, string>[] {
   text = text.replace(/\r\n/g, '\n').replace(/^\uFEFF/, '').trim();
-  const lines = text.split('\n');
+  // Build lines respecting quoted fields that contain embedded newlines
+  const lines: string[] = [];
+  let lineBuf = '';
+  let inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') { inQ = !inQ; lineBuf += ch; }
+    else if (ch === '\n' && inQ) { lineBuf += ' '; }
+    else if (ch === '\n') { lines.push(lineBuf); lineBuf = ''; }
+    else { lineBuf += ch; }
+  }
+  if (lineBuf.trim()) lines.push(lineBuf);
+
   const headers = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, ''));
 
   return lines
