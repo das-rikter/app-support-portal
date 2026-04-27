@@ -3,9 +3,13 @@
 import { useMemo } from 'react';
 import { useIncidentStore } from '@/store/useIncidentStore';
 import { PlotlyChart } from '@/components/incident/PlotlyChart';
-import { parseOutageHrs, CHART_COLORS, chartBase } from '@/lib/incidentUtils';
+import { parseOutageHrs, chartBase } from '@/lib/incidentUtils';
 
-const c = CHART_COLORS;
+function calculateLeftMargin(names: string[]): number {
+  if (!names.length) return 50;
+  const maxLength = Math.max(...names.map((n) => n.length));
+  return Math.max(maxLength * 8 + 20, 60);
+}
 
 export function ProductsView() {
   const filtered = useIncidentStore((s) => s.filtered);
@@ -14,19 +18,29 @@ export function ProductsView() {
   const outageHoursChart = useMemo(() => {
     const byProdHrs: Record<string, number> = {};
     filtered.forEach((d) => {
-      byProdHrs[d.product] = (byProdHrs[d.product] || 0) + parseOutageHrs(d.outage);
+      byProdHrs[d.product] = (byProdHrs[d.product] || 0) + parseOutageHrs(d.downtime);
     });
     const ph = Object.entries(byProdHrs).sort((a, b) => b[1] - a[1]);
+    const autoMargin = calculateLeftMargin(ph.map((p) => p[0]));
     return {
       data: [{
         type: 'bar',
         orientation: 'h',
         x: ph.map((p) => +p[1].toFixed(1)),
         y: ph.map((p) => p[0]),
-        marker: { color: ph.map((_, i) => (i === 0 ? c.b : i === 1 ? c.b2 : c.b3)) },
+        text: ph.map((p) => `${p[1].toFixed(1)}h`),
+        textposition: 'outside',
+        texttemplate: '%{text}',
+        textfont: { size: 11, color: 'var(--id-text)' },
+        cliponaxis: false,
+        marker: { color: ph.map((_, i) => (i === 0 ? 'var(--id-blue)' : i === 1 ? 'var(--id-blue-soft)' : 'var(--id-blue-soft)')) },
         hovertemplate: '%{y}: %{x} hrs<extra></extra>',
       }],
-      layout: { ...chartBase({ l: 130, r: 20, t: 10, b: 40 }) },
+      layout: {
+        ...chartBase({ l: autoMargin, r: 80, t: 10, b: 40 }),
+        xaxis: { automargin: true },
+        yaxis: { automargin: true },
+      },
       ph,
     };
   }, [filtered]);
@@ -36,18 +50,19 @@ export function ProductsView() {
     const prodList = [...new Set(filtered.map((d) => d.product))];
     const internal = prodList.map((p) => filtered.filter((d) => d.product === p && d.dasCaused === 1).length);
     const external = prodList.map((p) => filtered.filter((d) => d.product === p && d.dasCaused === 0).length);
+    const autoMargin = calculateLeftMargin(prodList);
     return {
       data: [
-        { type: 'bar', name: 'DAS Caused', x: prodList, y: internal, marker: { color: c.o } },
-        { type: 'bar', name: 'External/Partner', x: prodList, y: external, marker: { color: c.b2 } },
+        { type: 'bar', name: 'DAS Caused', orientation: 'h', y: prodList, x: internal, text: internal, textposition: 'outside', textangle: 0, textfont: { size: 11, color: 'var(--id-text)' }, cliponaxis: false, marker: { color: 'var(--id-accent)' } },
+        { type: 'bar', name: 'External/Partner', orientation: 'h', y: prodList, x: external, text: external, textposition: 'outside', textangle: 0, textfont: { size: 11, color: 'var(--id-text)' }, cliponaxis: false, marker: { color: 'var(--id-blue)' } },
       ],
       layout: {
-        ...chartBase({ l: 40, r: 10, t: 10, b: 90 }),
+        ...chartBase({ l: autoMargin, r: 160, t: 10, b: 40 }),
         barmode: 'stack',
         showlegend: true,
-        legend: { orientation: 'h', y: 1.1, font: { color: '#6b7280', size: 11 } },
-        xaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280', size: 11 }, zeroline: false, tickangle: -35 },
-        yaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280' }, zeroline: false },
+        legend: { orientation: 'v', x: 1.03, y: 0.5, font: { color: 'var(--id-muted)', size: 11 } },
+        xaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)', size: 11 }, zeroline: false, automargin: true },
+        yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)', size: 11 }, zeroline: false, automargin: true },
       },
     };
   }, [filtered]);
@@ -61,7 +76,7 @@ export function ProductsView() {
 
     const byProdHrs: Record<string, number> = {};
     filtered.forEach((d) => {
-      byProdHrs[d.product] = (byProdHrs[d.product] || 0) + parseOutageHrs(d.outage);
+      byProdHrs[d.product] = (byProdHrs[d.product] || 0) + parseOutageHrs(d.downtime);
     });
     const ph = Object.entries(byProdHrs).sort((a, b) => b[1] - a[1]);
     const maxHrs = ph[0]?.[1] || 1;
@@ -81,7 +96,7 @@ export function ProductsView() {
     <div>
       {/* Charts row */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Outage Hours by Product</div>
@@ -91,7 +106,7 @@ export function ProductsView() {
           </div>
           <PlotlyChart data={outageHoursChart.data} layout={outageHoursChart.layout} className="id-plot-area tall" />
         </div>
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Internal vs External Ownership</div>
@@ -106,7 +121,7 @@ export function ProductsView() {
       {/* Summary Grid */}
       <div className="id-summary-grid">
         {/* Incidents by product */}
-        <div className="bg-white border rounded-2xl p-5" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>Incidents by Product</div>
           <div className="id-mini-list">
             {summaryData.topCnt.map(([p, v]) => (
@@ -122,7 +137,7 @@ export function ProductsView() {
         </div>
 
         {/* Outage hours by product */}
-        <div className="bg-white border rounded-2xl p-5" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>Outage Hours by Product</div>
           <div className="id-mini-list">
             {summaryData.ph.map(([p, v]) => (
@@ -138,7 +153,7 @@ export function ProductsView() {
         </div>
 
         {/* P1 incidents by product */}
-        <div className="bg-white border rounded-2xl p-5" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>P1 Incidents by Product</div>
           <div className="id-mini-list">
             {summaryData.p1List.map(([p, s]) => (

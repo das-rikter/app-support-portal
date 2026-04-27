@@ -4,18 +4,21 @@ import { useMemo } from 'react';
 import { useIncidentStore } from '@/store/useIncidentStore';
 import { PlotlyChart } from '@/components/incident/PlotlyChart';
 import { parseOutageHrs, MONTH_ORDER, CHART_COLORS, chartBase } from '@/lib/incidentUtils';
-import { INCIDENTS } from '@/lib/incidentData';
 
 const c = CHART_COLORS;
 const ALERT_SRC_COLORS = [c.g, c.b, c.b2, c.o, c.o2, c.y, c.r, c.p, '#94a3b8', '#64748b', '#94a3b8', '#cbd5e1'];
 const MTTR_COLORS = [c.b, c.b2, c.b3, c.o, c.o2, '#94a3b8', '#64748b', '#cbd5e1'];
 
-const ALL_MONTHS = [...new Set(INCIDENTS.map((d) => d.month))].sort(
-  (a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b)
-);
-
 export function ProcessView() {
   const filtered = useIncidentStore((s) => s.filtered);
+  const incidents = useIncidentStore((s) => s.incidents);
+  
+  const ALL_MONTHS = useMemo(() => 
+    [...new Set(incidents.map((d) => d.month))].sort(
+      (a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b)
+    ),
+    [incidents]
+  );
 
   const total = filtered.length;
   const alertedCount = filtered.filter((d) => d.alerted === 1).length;
@@ -39,10 +42,15 @@ export function ProcessView() {
         orientation: 'h',
         x: srcs.map((s) => s[1]),
         y: srcs.map((s) => s[0]),
+        text: srcs.map((s) => String(s[1])),
+        texttemplate: '%{text}',
+        textposition: 'outside',
+        textfont: { size: 10, color: 'var(--id-text)' },
+        cliponaxis: false,
         marker: { color: srcs.map((_, i) => ALERT_SRC_COLORS[i] || '#94a3b8') },
         hovertemplate: '%{y}: %{x}<extra></extra>',
       }],
-      layout: { ...chartBase({ l: 170, r: 20, t: 10, b: 40 }) },
+      layout: { ...chartBase({ l: 170, r: 80, t: 10, b: 40 }) },
     };
   }, [filtered]);
 
@@ -55,8 +63,11 @@ export function ProcessView() {
         ? Math.round((mData.filter((d) => d.alerted === 1).length / mData.length) * 100)
         : 0;
     });
-    const alertMonths = Object.keys(alertByMonth);
-    const alertVals = Object.values(alertByMonth);
+    // Sort months chronologically using MONTH_ORDER
+    const alertMonths = Object.keys(alertByMonth).sort(
+      (a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b)
+    );
+    const alertVals = alertMonths.map((m) => alertByMonth[m]);
     return {
       data: [
         {
@@ -83,9 +94,9 @@ export function ProcessView() {
       ],
       layout: {
         ...chartBase({ l: 50, r: 20, t: 10, b: 40 }),
-        yaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280' }, zeroline: false, ticksuffix: '%', range: [0, 110] },
+        yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false, ticksuffix: '%', range: [0, 110] },
         showlegend: true,
-        legend: { x: 0.6, y: 1.1, font: { color: '#6b7280', size: 11 } },
+        legend: { x: 0.6, y: 1.1, font: { color: 'var(--id-muted)', size: 11 } },
       },
     };
   }, [filtered]);
@@ -95,7 +106,7 @@ export function ProcessView() {
     const mttrByProd: Record<string, { total: number; n: number }> = {};
     filtered.forEach((d) => {
       if (!mttrByProd[d.product]) mttrByProd[d.product] = { total: 0, n: 0 };
-      mttrByProd[d.product].total += parseOutageHrs(d.outage);
+      mttrByProd[d.product].total += parseOutageHrs(d.downtime);
       mttrByProd[d.product].n++;
     });
     const entries = Object.entries(mttrByProd)
@@ -111,36 +122,12 @@ export function ProcessView() {
       }],
       layout: {
         ...chartBase({ l: 50, r: 10, t: 10, b: 90 }),
-        xaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280', size: 11 }, zeroline: false, tickangle: -35 },
-        yaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280' }, zeroline: false, ticksuffix: 'h' },
+        xaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)', size: 11 }, zeroline: false, tickangle: -35 },
+        yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false, ticksuffix: 'h' },
       },
     };
   }, [filtered]);
 
-  // Postmortem by product chart
-  const postmortemChart = useMemo(() => {
-    const pmByProd: Record<string, { Yes: number; No: number; 'N/A': number }> = {};
-    filtered.forEach((d) => {
-      if (!pmByProd[d.product]) pmByProd[d.product] = { Yes: 0, No: 0, 'N/A': 0 };
-      pmByProd[d.product][d.postmortem] = (pmByProd[d.product][d.postmortem] || 0) + 1;
-    });
-    const pmProds = Object.keys(pmByProd);
-    return {
-      data: [
-        { type: 'bar', name: 'Yes', x: pmProds, y: pmProds.map((p) => pmByProd[p].Yes || 0), marker: { color: c.g } },
-        { type: 'bar', name: 'No', x: pmProds, y: pmProds.map((p) => pmByProd[p].No || 0), marker: { color: c.r } },
-        { type: 'bar', name: 'N/A', x: pmProds, y: pmProds.map((p) => pmByProd[p]['N/A'] || 0), marker: { color: '#94a3b8' } },
-      ],
-      layout: {
-        ...chartBase({ l: 40, r: 10, t: 10, b: 90 }),
-        barmode: 'stack',
-        showlegend: true,
-        legend: { orientation: 'h', y: 1.1, font: { color: '#6b7280', size: 11 } },
-        xaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280', size: 11 }, zeroline: false, tickangle: -35 },
-        yaxis: { gridcolor: 'rgba(20,24,32,.07)', tickfont: { color: '#6b7280' }, zeroline: false },
-      },
-    };
-  }, [filtered]);
 
   return (
     <div>
@@ -193,7 +180,7 @@ export function ProcessView() {
 
       {/* Alert charts row */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>How Were We Alerted?</div>
@@ -203,7 +190,7 @@ export function ProcessView() {
           </div>
           <PlotlyChart data={alertSourceChart.data} layout={alertSourceChart.layout} className="id-plot-area tall" />
         </div>
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Alert Coverage by Month</div>
@@ -217,7 +204,7 @@ export function ProcessView() {
 
       {/* MTTR + Postmortem row */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
           <div className="id-card-head">
             <div>
               <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Avg Resolution Time by Product</div>
@@ -226,16 +213,6 @@ export function ProcessView() {
             <span className="id-card-badge">MTTR</span>
           </div>
           <PlotlyChart data={mttrChart.data} layout={mttrChart.layout} className="id-plot-area" />
-        </div>
-        <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-          <div className="id-card-head">
-            <div>
-              <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Postmortem Completion</div>
-              <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Yes / No / N/A by product</div>
-            </div>
-            <span className="id-card-badge">Process</span>
-          </div>
-          <PlotlyChart data={postmortemChart.data} layout={postmortemChart.layout} className="id-plot-area" />
         </div>
       </div>
     </div>

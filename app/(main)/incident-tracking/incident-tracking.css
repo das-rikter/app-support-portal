@@ -25,6 +25,23 @@
   --id-r:            16px;
 }
 
+html.dark {
+  --id-bg:           #0f172a;
+  --id-bg2:          #111827;
+  --id-surface:      #111827;
+  --id-surface2:     #1f2937;
+  --id-text:         #f8fafc;
+  --id-muted:        #94a3b8;
+  --id-border:       rgba(148,163,184,.18);
+  --id-accent-bg:    rgba(214,106,6,.18);
+  --id-blue-soft:    rgba(59,130,246,.18);
+  --id-green-soft:   rgba(22,163,74,.18);
+  --id-warn-soft:    rgba(217,119,6,.18);
+  --id-danger-soft:  rgba(220,38,38,.18);
+  --id-shadow-sm:    0 1px 3px rgba(0,0,0,.18), 0 1px 2px rgba(0,0,0,.12);
+  --id-shadow:       0 8px 20px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.12);
+}
+
 /* ============================================================
    KPI CARDS
    ============================================================ */
@@ -96,6 +113,31 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 18px 20px 0;
+}
+
+.id-tab-nav {
+  background: var(--id-surface);
+  border-bottom: 1px solid var(--id-border);
+}
+
+.id-tab-button {
+  color: var(--id-muted);
+  border-bottom: 2px solid transparent;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.id-tab-button:hover {
+  color: var(--id-text);
+}
+
+.id-tab-button.active {
+  color: var(--id-accent);
+  border-color: var(--id-accent);
+}
+
+.id-quick-stat {
+  border: 1px solid var(--id-border);
+  background: var(--id-surface);
 }
 
 .id-card-badge {

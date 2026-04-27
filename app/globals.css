@@ -172,6 +172,41 @@
     /* Clementine 900 */
     --radius: 0.5rem;
   }
+
+  /* Dark mode overrides */
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 0 0% 98%;
+    --card: 222 47% 15%;
+    --card-foreground: 0 0% 98%;
+    --popover: 222 47% 15%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 22 100% 53%;
+    /* Brighter clementine for dark mode */
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 47% 20%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 222 47% 25%;
+    --muted-foreground: 210 40% 80%;
+    --accent: 222 47% 20%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 222 47% 11%;
+    --border: 222 47% 20%;
+    --input: 222 47% 20%;
+    --ring: 22 100% 53%;
+
+    /* --- Dark mode color overrides --- */
+    --color-sidebar: #1a1a1a;
+    --color-sidebar-foreground: #ffffff;
+    --color-sidebar-border: #333333;
+    --color-txt-neutral-900: #e0e0e0;
+    --color-txt-neutral-600: #b0b0b0;
+    --color-txt-neutral-100: #2a2a2a;
+    --color-txt-shuttle-gray-900: #d0d0d0;
+    --color-txt-shuttle-gray-600: #707070;
+    --color-txt-shuttle-gray-100: #3a3a3a;
+  }
 }
 
 /* 5. Base resets — all rules expressed as Tailwind utilities via @apply */

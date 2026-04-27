@@ -14,9 +14,11 @@ interface IncidentState {
   filters: IncidentFilters;
   filtered: Incident[];
   activeView: IncidentView;
+  incidents: Incident[];
   setView: (view: IncidentView) => void;
   setFilters: (filters: Partial<IncidentFilters>) => void;
   resetFilters: () => void;
+  setIncidents: (incidents: Incident[]) => void;
 }
 
 const DEFAULT_FILTERS: IncidentFilters = {
@@ -26,8 +28,8 @@ const DEFAULT_FILTERS: IncidentFilters = {
   ownership: '',
 };
 
-function applyFilters(filters: IncidentFilters): Incident[] {
-  return INCIDENTS.filter((d) => {
+function applyFilters(incidents: Incident[], filters: IncidentFilters): Incident[] {
+  return incidents.filter((d) => {
     if (filters.month && d.month !== filters.month) return false;
     if (filters.product && d.product !== filters.product) return false;
     if (filters.severity && d.sev !== filters.severity) return false;
@@ -44,7 +46,8 @@ export const useIncidentStore = create<IncidentState>()(
   devtools(
     (set) => ({
       filters: DEFAULT_FILTERS,
-      filtered: [...INCIDENTS],
+      incidents: [],
+      filtered: [],
       activeView: 'overview',
 
       setView: (view) => set({ activeView: view }),
@@ -52,11 +55,17 @@ export const useIncidentStore = create<IncidentState>()(
       setFilters: (newFilters) =>
         set((s) => {
           const filters = { ...s.filters, ...newFilters };
-          return { filters, filtered: applyFilters(filters) };
+          return { filters, filtered: applyFilters(s.incidents, filters) };
         }),
 
       resetFilters: () =>
-        set({ filters: DEFAULT_FILTERS, filtered: [...INCIDENTS] }),
+        set((s) => ({ filters: DEFAULT_FILTERS, filtered: [...s.incidents] })),
+
+      setIncidents: (incidents) =>
+        set((s) => ({
+          incidents,
+          filtered: applyFilters(incidents, s.filters),
+        })),
     }),
     { name: 'IncidentStore' }
   )
