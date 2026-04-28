@@ -6,7 +6,7 @@ export default function HomePage() {
     <div className="space-y-6">
       <PageHeader
         title="Home"
-        description="Welcome to the App Support Portal."
+        description="Welcome to the Application Support Portal."
       />
       <Card>
         <CardHeader>

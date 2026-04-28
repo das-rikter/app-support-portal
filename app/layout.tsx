@@ -5,7 +5,7 @@ import { SessionProvider } from "next-auth/react";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 
 export const metadata: Metadata = {
-  title: "App Support Portal",
+  title: "Application Support Portal",
   description: "DasTech Application Support Portal",
 };
 
