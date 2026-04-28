@@ -13,7 +13,7 @@ import { getMonths, getProducts } from '@/lib/incidentUtils';
 import { useIncidentStore } from '@/store/useIncidentStore';
 import type { Incident } from '@/types/incident';
 import { CheckCircle2, FileText } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const SEV_LABELS: Record<string, string> = {
   P1: 'Critical', P2: 'High', P3: 'Medium', P4: 'Low',
@@ -47,29 +47,6 @@ export function FilterBar() {
   const [pendingName, setPendingName] = useState('');
   const [dialogState, setDialogState] = useState<'closed' | 'verify' | 'success' | 'error'>('closed');
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    const savedMode = localStorage.getItem('darkMode') === 'true';
-    setIsDarkMode(savedMode);
-    updateDarkMode(savedMode);
-  }, []);
-
-  const updateDarkMode = (dark: boolean) => {
-    const html = document.documentElement;
-    if (dark) {
-      html.classList.add('dark');
-    } else {
-      html.classList.remove('dark');
-    }
-    localStorage.setItem('darkMode', dark.toString());
-  };
-
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    updateDarkMode(newMode);
-  };
 
   const ALL_MONTHS = getMonths(incidents);
   const ALL_PRODUCTS = getProducts(incidents);
@@ -217,24 +194,21 @@ export function FilterBar() {
               </DialogHeader>
 
               {/* File name */}
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
-                style={{ background: 'var(--id-surface2, #f8fafc)', border: '1px solid var(--id-border, #e2e8f0)' }}>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-secondary border border-border">
                 <FileText size={15} className="shrink-0 text-muted-foreground" />
                 <span className="truncate text-muted-foreground font-medium">{pendingName}</span>
               </div>
 
               {/* Stats grid */}
               <div className="grid grid-cols-2 gap-3 mt-1">
-                <div className="rounded-lg p-3 text-center"
-                  style={{ background: 'var(--id-surface2, #f8fafc)', border: '1px solid var(--id-border, #e2e8f0)' }}>
-                  <div className="text-2xl font-bold tabular-nums" style={{ color: 'var(--id-text, #0f172a)' }}>
+                <div className="rounded-lg p-3 text-center bg-secondary border border-border">
+                  <div className="text-2xl font-bold tabular-nums text-foreground">
                     {pending!.length}
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">Total Incidents</div>
                 </div>
-                <div className="rounded-lg p-3 text-center"
-                  style={{ background: 'var(--id-surface2, #f8fafc)', border: '1px solid var(--id-border, #e2e8f0)' }}>
-                  <div className="text-2xl font-bold tabular-nums" style={{ color: 'var(--id-text, #0f172a)' }}>
+                <div className="rounded-lg p-3 text-center bg-secondary border border-border">
+                  <div className="text-2xl font-bold tabular-nums text-foreground">
                     {summary.products.length}
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">Products</div>
@@ -242,8 +216,7 @@ export function FilterBar() {
               </div>
 
               {/* Severity breakdown */}
-              <div className="rounded-lg p-3"
-                style={{ background: 'var(--id-surface2, #f8fafc)', border: '1px solid var(--id-border, #e2e8f0)' }}>
+              <div className="rounded-lg p-3 bg-secondary border border-border">
                 <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">Severity Breakdown</div>
                 <div className="grid grid-cols-4 gap-2">
                   {(['P1', 'P2', 'P3', 'P4'] as const).map((sev) => (
@@ -259,15 +232,13 @@ export function FilterBar() {
               </div>
 
               {/* Months */}
-              <div className="rounded-lg p-3"
-                style={{ background: 'var(--id-surface2, #f8fafc)', border: '1px solid var(--id-border, #e2e8f0)' }}>
+              <div className="rounded-lg p-3 bg-secondary border border-border">
                 <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">
                   Months Covered ({summary.months.length})
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {summary.months.map((m) => (
-                    <span key={m} className="text-xs font-medium px-2 py-0.5 rounded-full"
-                      style={{ background: 'var(--id-accent-bg, #fff3e0)', color: 'var(--id-accent, #d66a06)' }}>
+                    <span key={m} className="text-xs font-medium px-2 py-0.5 rounded-full bg-[rgba(214,106,6,0.10)] dark:bg-[rgba(214,106,6,0.18)] text-[#d66a06]">
                       {m}
                     </span>
                   ))}
@@ -279,8 +250,7 @@ export function FilterBar() {
                   Cancel
                 </Button>
                 <Button
-                  className="flex-1 font-semibold"
-                  style={{ background: '#d66a06', color: '#fff' }}
+                  className="flex-1 font-semibold bg-[#d66a06] text-white hover:bg-[#b85505]"
                   onClick={handleConfirm}
                 >
                   Confirm & Load Data
@@ -300,12 +270,11 @@ export function FilterBar() {
               </DialogHeader>
 
               <div className="flex flex-col items-center gap-3 py-4">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{ background: 'var(--id-green-soft, #dcfce7)' }}>
-                  <CheckCircle2 size={32} style={{ color: 'var(--id-green, #16a34a)' }} />
+                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-[rgba(22,163,74,0.12)] dark:bg-[rgba(22,163,74,0.18)]">
+                  <CheckCircle2 size={32} className="text-[#16a34a]" />
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold tabular-nums" style={{ color: 'var(--id-text, #0f172a)' }}>
+                  <div className="text-2xl font-bold tabular-nums text-foreground">
                     {pending.length} incident{pending.length !== 1 ? 's' : ''} loaded
                   </div>
                   <div className="text-sm text-muted-foreground mt-1">
@@ -315,8 +284,7 @@ export function FilterBar() {
               </div>
 
               <Button
-                className="w-full font-semibold"
-                style={{ background: '#d66a06', color: '#fff' }}
+                className="w-full font-semibold bg-[#d66a06] text-white hover:bg-[#b85505]"
                 onClick={handleClose}
               >
                 Done

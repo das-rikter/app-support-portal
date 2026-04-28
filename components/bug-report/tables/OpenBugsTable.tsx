@@ -153,7 +153,7 @@ export function OpenBugsTable() {
             <tbody>
               {pageData.map((b) => {
                 const age = getAge(b);
-                const ageCls = age > 365 ? '!text-[#dc2626] font-bold' : age > 180 ? '!text-[#d97706] font-semibold' : '';
+                const ageCls = age > 365 ? 'text-[#dc2626]! font-bold' : age > 180 ? 'text-[#d97706]! font-semibold' : '';
                 const badgeCls = PRIORITY_BADGE[b.priority] || PRIORITY_BADGE.Medium;
                 const created = b.created
                   ? new Date(b.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })

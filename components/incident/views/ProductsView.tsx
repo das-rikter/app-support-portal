@@ -6,6 +6,12 @@ import { PlotlyChart } from '@/components/incident/PlotlyChart';
 import { parseOutageHrs, isMultiApp, chartBase } from '@/lib/incidentUtils';
 import type { Incident } from '@/types/incident';
 
+const CARD_HEAD = 'flex justify-between items-start px-5 pt-[18px] pb-0';
+const CARD_BADGE = 'px-[10px] py-[5px] rounded-full text-[10px] font-extrabold uppercase tracking-[0.08em] bg-[rgba(214,106,6,0.10)] dark:bg-[rgba(214,106,6,0.18)] text-[#d66a06] whitespace-nowrap shrink-0';
+const MINI_BAR_WRAP = 'flex-1 mx-[10px] h-[5px] bg-border rounded-full overflow-hidden';
+const MINI_BAR = 'h-full rounded-full';
+const MINI_VAL = 'font-bold text-xs tabular-nums min-w-9 text-right text-foreground';
+
 function calcLeftMargin(names: string[]): number {
   if (!names.length) return 50;
   return Math.min(Math.max(Math.max(...names.map((n) => n.length)) * 7 + 20, 80), 320);
@@ -99,12 +105,54 @@ function buildSummaryData(data: Incident[]) {
 function MultiAppDivider() {
   return (
     <div className="flex items-center gap-4 my-8">
-      <div className="flex-1 h-px" style={{ background: 'var(--id-border)' }} />
-      <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full"
-        style={{ color: 'var(--id-muted)', border: '1px solid var(--id-border)' }}>
+      <div className="flex-1 h-px bg-border" />
+      <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full text-muted-foreground border border-border">
         Multi-Application Incidents
       </span>
-      <div className="flex-1 h-px" style={{ background: 'var(--id-border)' }} />
+      <div className="flex-1 h-px bg-border" />
+    </div>
+  );
+}
+
+function SummaryGrid({ data, label }: { data: ReturnType<typeof buildSummaryData>; label: string }) {
+  return (
+    <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="border border-border rounded-2xl p-5 bg-card shadow-xs">
+        <div className="text-xs font-bold uppercase tracking-wide mb-3 text-muted-foreground">Incidents by {label}</div>
+        <div className="flex flex-col gap-2">
+          {data.topCnt.map(([p, v]) => (
+            <div key={p} className="flex justify-between items-center text-[13px]">
+              <span className="font-semibold" style={{ fontSize: 12, minWidth: 100 }}>{p}</span>
+              <div className={MINI_BAR_WRAP}><div className={MINI_BAR + ' bg-[#d66a06]'} style={{ width: `${Math.round((v / data.maxCnt) * 100)}%` }} /></div>
+              <span className={MINI_VAL}>{v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="border border-border rounded-2xl p-5 bg-card shadow-xs">
+        <div className="text-xs font-bold uppercase tracking-wide mb-3 text-muted-foreground">Outage Hours by {label}</div>
+        <div className="flex flex-col gap-2">
+          {data.ph.map(([p, v]) => (
+            <div key={p} className="flex justify-between items-center text-[13px]">
+              <span className="font-semibold" style={{ fontSize: 12, minWidth: 100 }}>{p}</span>
+              <div className={MINI_BAR_WRAP}><div className={MINI_BAR + ' bg-[#3b82f6]'} style={{ width: `${Math.round((v / data.maxHrs) * 100)}%` }} /></div>
+              <span className={MINI_VAL}>{v.toFixed(0)}h</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="border border-border rounded-2xl p-5 bg-card shadow-xs">
+        <div className="text-xs font-bold uppercase tracking-wide mb-3 text-muted-foreground">P1 Incidents by {label}</div>
+        <div className="flex flex-col gap-2">
+          {data.p1List.map(([p, s]) => (
+            <div key={p} className="flex justify-between items-center text-[13px]">
+              <span className="font-semibold" style={{ fontSize: 12, minWidth: 100 }}>{p}</span>
+              <div className={MINI_BAR_WRAP}><div className={MINI_BAR + ' bg-[#dc2626]'} style={{ width: `${Math.round(((s.P1 || 0) / data.maxP1) * 100)}%` }} /></div>
+              <span className={MINI_VAL + ' text-[#dc2626]'}>{s.P1 || 0}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -126,66 +174,29 @@ export function ProductsView() {
     <div>
       {/* ── Single-Application ── */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-          <div className="id-card-head">
+        <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+          <div className={CARD_HEAD}>
             <div>
-              <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Outage Hours by Product</div>
-              <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Total outage duration · log scale</div>
+              <div className="text-sm font-bold text-foreground">Outage Hours by Product</div>
+              <div className="text-xs mt-0.5 text-muted-foreground">Total outage duration · log scale</div>
             </div>
-            <span className="id-card-badge">Impact</span>
+            <span className={CARD_BADGE}>Impact</span>
           </div>
-          <PlotlyChart data={outageHoursChart.data} layout={outageHoursChart.layout} className="id-plot-area tall" />
+          <PlotlyChart data={outageHoursChart.data} layout={outageHoursChart.layout} className="h-80" />
         </div>
-        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-          <div className="id-card-head">
+        <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+          <div className={CARD_HEAD}>
             <div>
-              <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Internal vs External Ownership</div>
-              <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>DAS-caused vs partner/vendor by product</div>
+              <div className="text-sm font-bold text-foreground">Internal vs External Ownership</div>
+              <div className="text-xs mt-0.5 text-muted-foreground">DAS-caused vs partner/vendor by product</div>
             </div>
-            <span className="id-card-badge">Ownership</span>
+            <span className={CARD_BADGE}>Ownership</span>
           </div>
-          <PlotlyChart data={ownershipChart.data} layout={ownershipChart.layout} className="id-plot-area tall" />
+          <PlotlyChart data={ownershipChart.data} layout={ownershipChart.layout} className="h-80" />
         </div>
       </div>
 
-      <div className="id-summary-grid">
-        <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-          <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>Incidents by Product</div>
-          <div className="id-mini-list">
-            {summaryData.topCnt.map(([p, v]) => (
-              <div key={p} className="id-mini-row">
-                <span style={{ fontSize: 12, fontWeight: 600, minWidth: 100 }}>{p}</span>
-                <div className="id-mini-bar-wrap"><div className="id-mini-bar" style={{ width: `${Math.round((v / summaryData.maxCnt) * 100)}%` }} /></div>
-                <span className="id-mini-val">{v}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-          <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>Outage Hours by Product</div>
-          <div className="id-mini-list">
-            {summaryData.ph.map(([p, v]) => (
-              <div key={p} className="id-mini-row">
-                <span style={{ fontSize: 12, fontWeight: 600, minWidth: 100 }}>{p}</span>
-                <div className="id-mini-bar-wrap"><div className="id-mini-bar" style={{ width: `${Math.round((v / summaryData.maxHrs) * 100)}%`, background: 'var(--id-blue)' }} /></div>
-                <span className="id-mini-val">{v.toFixed(0)}h</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-          <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>P1 Incidents by Product</div>
-          <div className="id-mini-list">
-            {summaryData.p1List.map(([p, s]) => (
-              <div key={p} className="id-mini-row">
-                <span style={{ fontSize: 12, fontWeight: 600, minWidth: 100 }}>{p}</span>
-                <div className="id-mini-bar-wrap"><div className="id-mini-bar" style={{ width: `${Math.round(((s.P1 || 0) / summaryData.maxP1) * 100)}%`, background: 'var(--id-danger)' }} /></div>
-                <span className="id-mini-val" style={{ color: 'var(--id-danger)' }}>{s.P1 || 0}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <SummaryGrid data={summaryData} label="Product" />
 
       {/* ── Multi-Application ── */}
       {multiApp.length > 0 && (
@@ -193,66 +204,29 @@ export function ProductsView() {
           <MultiAppDivider />
 
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-              <div className="id-card-head">
+            <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+              <div className={CARD_HEAD}>
                 <div>
-                  <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Outage Hours by Product Pairing</div>
-                  <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Total outage duration · log scale</div>
+                  <div className="text-sm font-bold text-foreground">Outage Hours by Product Pairing</div>
+                  <div className="text-xs mt-0.5 text-muted-foreground">Total outage duration · log scale</div>
                 </div>
-                <span className="id-card-badge">Impact</span>
+                <span className={CARD_BADGE}>Impact</span>
               </div>
-              <PlotlyChart data={maOutageHoursChart.data} layout={maOutageHoursChart.layout} className="id-plot-area tall" />
+              <PlotlyChart data={maOutageHoursChart.data} layout={maOutageHoursChart.layout} className="h-80" />
             </div>
-            <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-              <div className="id-card-head">
+            <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+              <div className={CARD_HEAD}>
                 <div>
-                  <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Internal vs External Ownership</div>
-                  <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>DAS-caused vs partner/vendor by pairing</div>
+                  <div className="text-sm font-bold text-foreground">Internal vs External Ownership</div>
+                  <div className="text-xs mt-0.5 text-muted-foreground">DAS-caused vs partner/vendor by pairing</div>
                 </div>
-                <span className="id-card-badge">Ownership</span>
+                <span className={CARD_BADGE}>Ownership</span>
               </div>
-              <PlotlyChart data={maOwnershipChart.data} layout={maOwnershipChart.layout} className="id-plot-area tall" />
+              <PlotlyChart data={maOwnershipChart.data} layout={maOwnershipChart.layout} className="h-80" />
             </div>
           </div>
 
-          <div className="id-summary-grid">
-            <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-              <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>Incidents by Product Pairing</div>
-              <div className="id-mini-list">
-                {maSummaryData.topCnt.map(([p, v]) => (
-                  <div key={p} className="id-mini-row">
-                    <span style={{ fontSize: 12, fontWeight: 600, minWidth: 100 }}>{p}</span>
-                    <div className="id-mini-bar-wrap"><div className="id-mini-bar" style={{ width: `${Math.round((v / maSummaryData.maxCnt) * 100)}%` }} /></div>
-                    <span className="id-mini-val">{v}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-              <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>Outage Hours by Product Pairing</div>
-              <div className="id-mini-list">
-                {maSummaryData.ph.map(([p, v]) => (
-                  <div key={p} className="id-mini-row">
-                    <span style={{ fontSize: 12, fontWeight: 600, minWidth: 100 }}>{p}</span>
-                    <div className="id-mini-bar-wrap"><div className="id-mini-bar" style={{ width: `${Math.round((v / maSummaryData.maxHrs) * 100)}%`, background: 'var(--id-blue)' }} /></div>
-                    <span className="id-mini-val">{v.toFixed(0)}h</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="border rounded-2xl p-5" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-              <div className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--id-muted)' }}>P1 Incidents by Product Pairing</div>
-              <div className="id-mini-list">
-                {maSummaryData.p1List.map(([p, s]) => (
-                  <div key={p} className="id-mini-row">
-                    <span style={{ fontSize: 12, fontWeight: 600, minWidth: 100 }}>{p}</span>
-                    <div className="id-mini-bar-wrap"><div className="id-mini-bar" style={{ width: `${Math.round(((s.P1 || 0) / maSummaryData.maxP1) * 100)}%`, background: 'var(--id-danger)' }} /></div>
-                    <span className="id-mini-val" style={{ color: 'var(--id-danger)' }}>{s.P1 || 0}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <SummaryGrid data={maSummaryData} label="Product Pairing" />
         </>
       )}
     </div>

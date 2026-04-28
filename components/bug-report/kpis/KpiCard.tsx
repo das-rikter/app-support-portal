@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 const ACCENT_BAR: Record<string, string> = {
   primary:  'bg-primary-clementine-900',
   success:  'bg-[#16a34a]',
@@ -9,7 +11,7 @@ const ACCENT_BAR: Record<string, string> = {
 
 interface KpiCardProps {
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
   sub: string;
   accent: 'primary' | 'success' | 'warning' | 'error' | 'critical' | 'purple';
 }

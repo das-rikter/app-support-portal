@@ -9,6 +9,9 @@ import type { Incident } from '@/types/incident';
 const c = CHART_COLORS;
 const ALERT_SRC_COLORS = [c.g, c.b, c.b2, c.o, c.o2, c.y, c.r, c.p, '#94a3b8', '#64748b', '#94a3b8', '#cbd5e1'];
 
+const CARD_HEAD = 'flex justify-between items-start px-5 pt-[18px] pb-0';
+const CARD_BADGE = 'px-[10px] py-[5px] rounded-full text-[10px] font-extrabold uppercase tracking-[0.08em] bg-[rgba(214,106,6,0.10)] dark:bg-[rgba(214,106,6,0.18)] text-[#d66a06] whitespace-nowrap shrink-0';
+
 function truncateName(name: string, maxLen = 28): string {
   return name.length <= maxLen ? name : name.slice(0, maxLen - 1) + '…';
 }
@@ -135,12 +138,73 @@ function kpis(data: Incident[]) {
 function MultiAppDivider() {
   return (
     <div className="flex items-center gap-4 my-8">
-      <div className="flex-1 h-px" style={{ background: 'var(--id-border)' }} />
-      <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full"
-        style={{ color: 'var(--id-muted)', border: '1px solid var(--id-border)' }}>
+      <div className="flex-1 h-px bg-border" />
+      <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full text-muted-foreground border border-border">
         Multi-Application Incidents
       </span>
-      <div className="flex-1 h-px" style={{ background: 'var(--id-border)' }} />
+      <div className="flex-1 h-px bg-border" />
+    </div>
+  );
+}
+
+function KpiCard({ accent, children }: { accent: 'accent' | 'blue' | 'green' | 'warn'; children: React.ReactNode }) {
+  const bar: Record<string, string> = {
+    accent: 'bg-gradient-to-r from-[#d66a06] to-[#f1a24b]',
+    blue:   'bg-[#3b82f6]',
+    green:  'bg-[#16a34a]',
+    warn:   'bg-[#d97706]',
+  };
+  return (
+    <div className="relative overflow-hidden bg-card rounded-2xl border border-border p-5 shadow-xs">
+      <div className={`absolute top-0 left-0 right-0 h-0.75 rounded-t-2xl ${bar[accent]}`} />
+      {children}
+    </div>
+  );
+}
+
+function KpiSection({ sa, label }: { sa: ReturnType<typeof kpis>; label: string }) {
+  return (
+    <div className="grid grid-cols-4 gap-4 mb-6">
+      <KpiCard accent="green">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 bg-[rgba(22,163,74,0.12)] dark:bg-[rgba(22,163,74,0.18)]">
+          <svg className="w-4 h-4 text-[#16a34a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 20V10" /><path d="M12 20V4" /><path d="M6 20v-6" />
+          </svg>
+        </div>
+        <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">Alert Coverage</div>
+        <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{sa.alertPct}%</div>
+        <div className="mt-2 text-xs text-muted-foreground">{sa.alertedCount} of {sa.total} alerted</div>
+      </KpiCard>
+      <KpiCard accent="warn">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 bg-[rgba(217,119,6,0.12)] dark:bg-[rgba(217,119,6,0.18)]">
+          <svg className="w-4 h-4 text-[#d97706]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 .49-3.5" />
+          </svg>
+        </div>
+        <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">Reoccurring Issues</div>
+        <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{sa.reoccurN}</div>
+        <div className="mt-2 text-xs text-muted-foreground">Repeat incidents</div>
+      </KpiCard>
+      <KpiCard accent="accent">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 bg-[rgba(214,106,6,0.10)] dark:bg-[rgba(214,106,6,0.18)]">
+          <svg className="w-4 h-4 text-[#d66a06]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          </svg>
+        </div>
+        <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">DAS Caused</div>
+        <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{sa.dasCausedN}</div>
+        <div className="mt-2 text-xs text-muted-foreground">{Math.round((sa.dasCausedN / Math.max(sa.total, 1)) * 100)}% of incidents</div>
+      </KpiCard>
+      <KpiCard accent="blue">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 bg-[rgba(59,130,246,0.12)] dark:bg-[rgba(59,130,246,0.18)]">
+          <svg className="w-4 h-4 text-[#3b82f6]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+          </svg>
+        </div>
+        <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">Postmortem Rate</div>
+        <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{sa.postPct}%</div>
+        <div className="mt-2 text-xs text-muted-foreground">{sa.postYes} completed</div>
+      </KpiCard>
     </div>
   );
 }
@@ -176,82 +240,41 @@ export function ProcessView() {
   return (
     <div>
       {/* ── Single-Application KPIs ── */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="id-kpi-card" data-accent="green">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--id-green-soft)' }}>
-            <svg className="w-4 h-4" style={{ color: 'var(--id-green)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 20V10" /><path d="M12 20V4" /><path d="M6 20v-6" />
-            </svg>
+      <KpiSection sa={sa} label="single-app" />
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+          <div className={CARD_HEAD}>
+            <div>
+              <div className="text-sm font-bold text-foreground">How Were We Alerted?</div>
+              <div className="text-xs mt-0.5 text-muted-foreground">Detection channel breakdown</div>
+            </div>
+            <span className={CARD_BADGE}>Detection</span>
           </div>
-          <div className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--id-muted)' }}>Alert Coverage</div>
-          <div className="text-4xl font-bold tabular-nums leading-none" style={{ color: 'var(--id-text)' }}>{sa.alertPct}%</div>
-          <div className="mt-2 text-xs" style={{ color: 'var(--id-muted)' }}>{sa.alertedCount} of {sa.total} alerted</div>
+          <PlotlyChart data={alertSourceChart.data} layout={alertSourceChart.layout} className="h-80" />
         </div>
-        <div className="id-kpi-card" data-accent="warn">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--id-warn-soft)' }}>
-            <svg className="w-4 h-4" style={{ color: 'var(--id-warn)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 .49-3.5" />
-            </svg>
+        <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+          <div className={CARD_HEAD}>
+            <div>
+              <div className="text-sm font-bold text-foreground">Alert Coverage by Month</div>
+              <div className="text-xs mt-0.5 text-muted-foreground">% of incidents with triggered alerts</div>
+            </div>
+            <span className={CARD_BADGE}>Coverage</span>
           </div>
-          <div className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--id-muted)' }}>Reoccurring Issues</div>
-          <div className="text-4xl font-bold tabular-nums leading-none" style={{ color: 'var(--id-text)' }}>{sa.reoccurN}</div>
-          <div className="mt-2 text-xs" style={{ color: 'var(--id-muted)' }}>Repeat incidents</div>
-        </div>
-        <div className="id-kpi-card" data-accent="accent">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--id-accent-bg)' }}>
-            <svg className="w-4 h-4" style={{ color: 'var(--id-accent)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            </svg>
-          </div>
-          <div className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--id-muted)' }}>DAS Caused</div>
-          <div className="text-4xl font-bold tabular-nums leading-none" style={{ color: 'var(--id-text)' }}>{sa.dasCausedN}</div>
-          <div className="mt-2 text-xs" style={{ color: 'var(--id-muted)' }}>{Math.round((sa.dasCausedN / Math.max(sa.total, 1)) * 100)}% of incidents</div>
-        </div>
-        <div className="id-kpi-card" data-accent="blue">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--id-blue-soft)' }}>
-            <svg className="w-4 h-4" style={{ color: 'var(--id-blue)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-            </svg>
-          </div>
-          <div className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--id-muted)' }}>Postmortem Rate</div>
-          <div className="text-4xl font-bold tabular-nums leading-none" style={{ color: 'var(--id-text)' }}>{sa.postPct}%</div>
-          <div className="mt-2 text-xs" style={{ color: 'var(--id-muted)' }}>{sa.postYes} completed</div>
+          <PlotlyChart data={alertCoverageChart.data} layout={alertCoverageChart.layout} className="h-80" />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-          <div className="id-card-head">
+        <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+          <div className={CARD_HEAD}>
             <div>
-              <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>How Were We Alerted?</div>
-              <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Detection channel breakdown</div>
+              <div className="text-sm font-bold text-foreground">Avg Resolution Time by Product</div>
+              <div className="text-xs mt-0.5 text-muted-foreground">Mean time to resolve · log scale</div>
             </div>
-            <span className="id-card-badge">Detection</span>
+            <span className={CARD_BADGE}>MTTR</span>
           </div>
-          <PlotlyChart data={alertSourceChart.data} layout={alertSourceChart.layout} className="id-plot-area tall" />
-        </div>
-        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-          <div className="id-card-head">
-            <div>
-              <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Alert Coverage by Month</div>
-              <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>% of incidents with triggered alerts</div>
-            </div>
-            <span className="id-card-badge">Coverage</span>
-          </div>
-          <PlotlyChart data={alertCoverageChart.data} layout={alertCoverageChart.layout} className="id-plot-area tall" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-          <div className="id-card-head">
-            <div>
-              <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Avg Resolution Time by Product</div>
-              <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Mean time to resolve · log scale</div>
-            </div>
-            <span className="id-card-badge">MTTR</span>
-          </div>
-          <PlotlyChart data={mttrChart.data} layout={mttrChart.layout} className="id-plot-area tall" />
+          <PlotlyChart data={mttrChart.data} layout={mttrChart.layout} className="h-80" />
         </div>
       </div>
 
@@ -260,82 +283,41 @@ export function ProcessView() {
         <>
           <MultiAppDivider />
 
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="id-kpi-card" data-accent="green">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--id-green-soft)' }}>
-                <svg className="w-4 h-4" style={{ color: 'var(--id-green)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 20V10" /><path d="M12 20V4" /><path d="M6 20v-6" />
-                </svg>
+          <KpiSection sa={ma} label="multi-app" />
+
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+              <div className={CARD_HEAD}>
+                <div>
+                  <div className="text-sm font-bold text-foreground">How Were We Alerted?</div>
+                  <div className="text-xs mt-0.5 text-muted-foreground">Detection channel breakdown</div>
+                </div>
+                <span className={CARD_BADGE}>Detection</span>
               </div>
-              <div className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--id-muted)' }}>Alert Coverage</div>
-              <div className="text-4xl font-bold tabular-nums leading-none" style={{ color: 'var(--id-text)' }}>{ma.alertPct}%</div>
-              <div className="mt-2 text-xs" style={{ color: 'var(--id-muted)' }}>{ma.alertedCount} of {ma.total} alerted</div>
+              <PlotlyChart data={maAlertSourceChart.data} layout={maAlertSourceChart.layout} className="h-80" />
             </div>
-            <div className="id-kpi-card" data-accent="warn">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--id-warn-soft)' }}>
-                <svg className="w-4 h-4" style={{ color: 'var(--id-warn)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 .49-3.5" />
-                </svg>
+            <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+              <div className={CARD_HEAD}>
+                <div>
+                  <div className="text-sm font-bold text-foreground">Alert Coverage by Month</div>
+                  <div className="text-xs mt-0.5 text-muted-foreground">% of incidents with triggered alerts</div>
+                </div>
+                <span className={CARD_BADGE}>Coverage</span>
               </div>
-              <div className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--id-muted)' }}>Reoccurring Issues</div>
-              <div className="text-4xl font-bold tabular-nums leading-none" style={{ color: 'var(--id-text)' }}>{ma.reoccurN}</div>
-              <div className="mt-2 text-xs" style={{ color: 'var(--id-muted)' }}>Repeat incidents</div>
-            </div>
-            <div className="id-kpi-card" data-accent="accent">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--id-accent-bg)' }}>
-                <svg className="w-4 h-4" style={{ color: 'var(--id-accent)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                </svg>
-              </div>
-              <div className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--id-muted)' }}>DAS Caused</div>
-              <div className="text-4xl font-bold tabular-nums leading-none" style={{ color: 'var(--id-text)' }}>{ma.dasCausedN}</div>
-              <div className="mt-2 text-xs" style={{ color: 'var(--id-muted)' }}>{Math.round((ma.dasCausedN / Math.max(ma.total, 1)) * 100)}% of incidents</div>
-            </div>
-            <div className="id-kpi-card" data-accent="blue">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'var(--id-blue-soft)' }}>
-                <svg className="w-4 h-4" style={{ color: 'var(--id-blue)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-                </svg>
-              </div>
-              <div className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--id-muted)' }}>Postmortem Rate</div>
-              <div className="text-4xl font-bold tabular-nums leading-none" style={{ color: 'var(--id-text)' }}>{ma.postPct}%</div>
-              <div className="mt-2 text-xs" style={{ color: 'var(--id-muted)' }}>{ma.postYes} completed</div>
+              <PlotlyChart data={maAlertCoverageChart.data} layout={maAlertCoverageChart.layout} className="h-80" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-              <div className="id-card-head">
+            <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+              <div className={CARD_HEAD}>
                 <div>
-                  <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>How Were We Alerted?</div>
-                  <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Detection channel breakdown</div>
+                  <div className="text-sm font-bold text-foreground">Avg Resolution Time by Product Pairing</div>
+                  <div className="text-xs mt-0.5 text-muted-foreground">Mean time to resolve · log scale</div>
                 </div>
-                <span className="id-card-badge">Detection</span>
+                <span className={CARD_BADGE}>MTTR</span>
               </div>
-              <PlotlyChart data={maAlertSourceChart.data} layout={maAlertSourceChart.layout} className="id-plot-area tall" />
-            </div>
-            <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-              <div className="id-card-head">
-                <div>
-                  <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Alert Coverage by Month</div>
-                  <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>% of incidents with triggered alerts</div>
-                </div>
-                <span className="id-card-badge">Coverage</span>
-              </div>
-              <PlotlyChart data={maAlertCoverageChart.data} layout={maAlertCoverageChart.layout} className="id-plot-area tall" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
-              <div className="id-card-head">
-                <div>
-                  <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>Avg Resolution Time by Product Pairing</div>
-                  <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Mean time to resolve · log scale</div>
-                </div>
-                <span className="id-card-badge">MTTR</span>
-              </div>
-              <PlotlyChart data={maMttrChart.data} layout={maMttrChart.layout} className="id-plot-area tall" />
+              <PlotlyChart data={maMttrChart.data} layout={maMttrChart.layout} className="h-80" />
             </div>
           </div>
         </>

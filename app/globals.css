@@ -171,6 +171,24 @@
     --ring: 22 100% 43%;
     /* Clementine 900 */
     --radius: 0.5rem;
+
+    /* Incident dashboard chart color tokens (read by PlotlyChart.tsx via getComputedStyle) */
+    --id-text:         #1a1d23;
+    --id-muted:        #6b7280;
+    --id-border:       rgba(20,24,32,.09);
+    --id-surface:      #ffffff;
+    --id-surface2:     #f7f8fa;
+    --id-accent:       #d66a06;
+    --id-accent2:      #f1a24b;
+    --id-accent-bg:    rgba(214,106,6,.10);
+    --id-blue:         #3b82f6;
+    --id-blue-soft:    rgba(59,130,246,.12);
+    --id-green:        #16a34a;
+    --id-green-soft:   rgba(22,163,74,.12);
+    --id-warn:         #d97706;
+    --id-warn-soft:    rgba(217,119,6,.12);
+    --id-danger:       #dc2626;
+    --id-danger-soft:  rgba(220,38,38,.12);
   }
 
   /* Dark mode overrides */
@@ -237,6 +255,18 @@
     --color-bdr-alert-success: #14532d;
     --color-bdr-alert-brand:   #7c2d12;
     --color-bdr-alert-gray:    #374151;
+
+    /* Incident dashboard chart color tokens (dark overrides) */
+    --id-text:         #f8fafc;
+    --id-muted:        #94a3b8;
+    --id-border:       rgba(148,163,184,.18);
+    --id-surface:      #111827;
+    --id-surface2:     #1f2937;
+    --id-accent-bg:    rgba(214,106,6,.18);
+    --id-blue-soft:    rgba(59,130,246,.18);
+    --id-green-soft:   rgba(22,163,74,.18);
+    --id-warn-soft:    rgba(217,119,6,.18);
+    --id-danger-soft:  rgba(220,38,38,.18);
   }
 }
 
