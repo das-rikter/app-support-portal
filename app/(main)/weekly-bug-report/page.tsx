@@ -14,35 +14,31 @@ import { OpenBugsTable } from '@/components/bug-report/tables/OpenBugsTable';
 import { StatusTable } from '@/components/bug-report/tables/StatusTable';
 import { WeeklyTable } from '@/components/bug-report/tables/WeeklyTable';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Card, CardContent } from '@/components/ui/card';
-import './bug-report.css';
 
 export default function WeeklyBugReportPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Weekly Bug Report"
-        description="Monitor and manage weekly bug reports."
-      />
-      <Card>
-        <CardContent>
-          <DashboardToolbar />
-          <NavTabs />
-          <div className="mx-auto px-1 flex flex-col gap-8 pb-16 pt-8">
-            <KpiSection />
-            <BugsByProjectChart />
-            <PriorityCharts />
-            <AgeCharts />
-            <TimelineChart />
-            <StatusTable />
-            <WeeklyTable />
-            <OpenBugsTable />
-            <LeadSection />
-          </div>
-          <Toast />
-          <PublishModal />
-        </CardContent>
-      </Card>
+    <div className="flex flex-col">
+      <div className="pt-6 pb-4 space-y-4">
+        <PageHeader
+          title="Weekly Bug Report"
+          description="Monitor and manage weekly bug reports."
+        />
+        <DashboardToolbar />
+      </div>
+      <NavTabs />
+      <div className="px-1 flex flex-col gap-8 pb-16 pt-8">
+        <KpiSection />
+        <BugsByProjectChart />
+        <PriorityCharts />
+        <AgeCharts />
+        <TimelineChart />
+        <StatusTable />
+        <WeeklyTable />
+        <OpenBugsTable />
+        <LeadSection />
+      </div>
+      <Toast />
+      <PublishModal />
     </div>
   );
 }

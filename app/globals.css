@@ -104,8 +104,8 @@
   --color-bdr-alert-gray: #e5e7eb;
 
   /* --- Sidebar tokens --- */
-  --color-sidebar: rgb(34, 36, 37);
-  --color-sidebar-foreground: #ffffff;
+  --color-sidebar: #ffffff;
+  --color-sidebar-foreground: #000000;
   --color-sidebar-primary: #dd6000;
   --color-sidebar-primary-foreground: #ffffff;
   --color-sidebar-accent: #dd6000;
@@ -182,7 +182,6 @@
     --popover: 222 47% 15%;
     --popover-foreground: 0 0% 98%;
     --primary: 22 100% 53%;
-    /* Brighter clementine for dark mode */
     --primary-foreground: 222 47% 11%;
     --secondary: 222 47% 20%;
     --secondary-foreground: 0 0% 98%;
@@ -196,20 +195,56 @@
     --input: 222 47% 20%;
     --ring: 22 100% 53%;
 
-    /* --- Dark mode color overrides --- */
+    /* --- Sidebar --- */
     --color-sidebar: #1a1a1a;
     --color-sidebar-foreground: #ffffff;
-    --color-sidebar-border: #333333;
+    --color-sidebar-border: #2e2e2e;
+
+    /* --- Text tokens --- */
     --color-txt-neutral-900: #e0e0e0;
-    --color-txt-neutral-600: #b0b0b0;
-    --color-txt-neutral-100: #2a2a2a;
+    --color-txt-neutral-600: #a0a0a0;
+    --color-txt-neutral-100: #f2f2f2;
     --color-txt-shuttle-gray-900: #d0d0d0;
     --color-txt-shuttle-gray-600: #707070;
-    --color-txt-shuttle-gray-100: #3a3a3a;
+    --color-txt-shuttle-gray-100: #ddddde;
+
+    /* --- Secondary backgrounds --- */
+    --color-secondary-background-900: #1c1c1e;
+    --color-secondary-background-250: #1f2128;
+    --color-secondary-background-200: #1a1c20;
+    --color-secondary-background-150: #2a2c30;
+    --color-secondary-background-100: #1a1c20;
+    --color-secondary-background-50:  #16181c;
+
+    /* --- Status badge backgrounds --- */
+    --color-status-verified-bg:    #052e16;
+    --color-status-pending-bg:     #1c1400;
+    --color-status-in-progress-bg: #001e30;
+    --color-status-failed-bg:      #1f0000;
+    --color-status-rejected-bg:    #1f0000;
+    --color-status-suspended-bg:   #1f0d00;
+    --color-status-expired-bg:     #1a1c20;
+    --color-status-unknown-bg:     #1a1c20;
+    --color-status-error-bg:       #1f0000;
+    --color-status-warning-bg:     #1c1400;
+    --color-status-success-bg:     #052e16;
+
+    /* --- Alert borders --- */
+    --color-bdr-alert-error:   #7f1d1d;
+    --color-bdr-alert-warning: #78350f;
+    --color-bdr-alert-success: #14532d;
+    --color-bdr-alert-brand:   #7c2d12;
+    --color-bdr-alert-gray:    #374151;
   }
 }
 
-/* 5. Base resets — all rules expressed as Tailwind utilities via @apply */
+/* 5. Toast animation */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 6. Base resets — all rules expressed as Tailwind utilities via @apply */
 @layer base {
   * {
     @apply border-border box-border;
