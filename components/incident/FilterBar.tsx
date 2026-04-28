@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Moon, Sun, CheckCircle2, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { parseIncidentsCSV } from '@/lib/csvParser';
 import { getMonths, getProducts } from '@/lib/incidentUtils';
 import { useIncidentStore } from '@/store/useIncidentStore';
 import type { Incident } from '@/types/incident';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { CheckCircle2, FileText } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const SEV_LABELS: Record<string, string> = {
   P1: 'Critical', P2: 'High', P3: 'Medium', P4: 'Low',
@@ -201,14 +201,6 @@ export function FilterBar() {
           </span>
         )}
       </div>
-
-      <button
-        onClick={toggleDarkMode}
-        className="p-2 rounded-md border border-sidebar-border bg-background text-foreground hover:border-[#d66a06] hover:text-[#d66a06] transition-colors"
-        title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-      >
-        {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-      </button>
 
       {/* Verify / Success / Error dialog */}
       <Dialog open={dialogState !== 'closed'} onOpenChange={(open) => { if (!open) handleClose(); }}>

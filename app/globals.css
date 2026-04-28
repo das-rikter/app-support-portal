@@ -196,9 +196,11 @@
     --ring: 22 100% 53%;
 
     /* --- Sidebar --- */
-    --color-sidebar: #1a1a1a;
-    --color-sidebar-foreground: #ffffff;
-    --color-sidebar-border: #2e2e2e;
+    --color-sidebar: hsl(222, 47%, 11%);
+    --color-sidebar-foreground: hsl(0, 0%, 98%);
+    --color-sidebar-border: hsl(222, 47%, 20%);
+    --color-sidebar-accent: hsl(222, 47%, 22%);
+    --color-sidebar-accent-foreground: hsl(0, 0%, 98%);
 
     /* --- Text tokens --- */
     --color-txt-neutral-900: #e0e0e0;
