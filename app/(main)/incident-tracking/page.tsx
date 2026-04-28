@@ -3,7 +3,6 @@
 import { FilterBar } from '@/components/incident/FilterBar';
 import { QuickStats } from '@/components/incident/QuickStats';
 import { IncidentsView } from '@/components/incident/views/IncidentsView';
-import { MultiAppView } from '@/components/incident/views/MultiAppView';
 import { OverviewView } from '@/components/incident/views/OverviewView';
 import { ProcessView } from '@/components/incident/views/ProcessView';
 import { ProductsView } from '@/components/incident/views/ProductsView';
@@ -46,7 +45,6 @@ export default function IncidentTrackingPage() {
                   {activeView === 'products' && <ProductsView />}
                   {activeView === 'process' && <ProcessView />}
                   {activeView === 'incidents' && <IncidentsView />}
-                  {activeView === 'multi-app' && <MultiAppView />}
                 </div>
               </>
             )}

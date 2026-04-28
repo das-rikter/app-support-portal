@@ -8,7 +8,6 @@ const TABS: { id: IncidentView; label: string }[] = [
   { id: 'products',   label: 'Product & Ownership' },
   { id: 'process',    label: 'Process & Reliability' },
   { id: 'incidents',  label: 'All Incidents' },
-  { id: 'multi-app',  label: 'Multi-App' },
 ];
 
 export function ViewTabs() {
