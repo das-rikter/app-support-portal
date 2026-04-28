@@ -11,7 +11,6 @@ import { ViewTabs } from '@/components/incident/ViewTabs';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { useIncidentStore } from '@/store/useIncidentStore';
-import './incident-tracking.css';
 
 export default function IncidentTrackingPage() {
   const activeView = useIncidentStore((s) => s.activeView);
@@ -20,7 +19,7 @@ export default function IncidentTrackingPage() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-6 pt-6">
         <PageHeader
           title="Incident Tracking"
           description="Monitor and manage active incidents."
@@ -30,8 +29,8 @@ export default function IncidentTrackingPage() {
             <FilterBar />
             <ViewTabs />
             {!hasData ? (
-              <div className="border border-dashed rounded-2xl p-12 mt-6 text-center" style={{ borderColor: 'var(--id-border)', background: 'var(--id-surface)' }}>
-                <h2 className="text-xl font-semibold" style={{ color: 'var(--id-text)' }}>
+              <div className="border border-dashed border-border bg-card rounded-2xl p-12 mt-6 text-center">
+                <h2 className="text-xl font-semibold text-foreground">
                   No incident data loaded.
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">

@@ -1,7 +1,7 @@
 'use client';
 
-import { useBugReportStore } from '@/store/useBugReportStore';
 import { useScrollSpy } from '@/hooks/useScrollSpy';
+import { useBugReportStore } from '@/store/useBugReportStore';
 
 const TABS = [
   { id: 'section-kpis', label: 'Overview' },
@@ -27,17 +27,16 @@ export function NavTabs() {
   }
 
   return (
-    <nav className="sticky top-16 z-40 bg-white border-b border-gray-200 -mx-6">
+    <nav className="sticky top-0 z-40 bg-card border-b border-border -mx-6">
       <div className="flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((tab) => (
           <a
             key={tab.id}
             href={`#${tab.id}`}
-            className={`px-4 py-3 text-xs font-semibold no-underline border-b-2 whitespace-nowrap transition-colors ${
-              activeSection === tab.id
+            className={`px-4 py-3 text-xs font-semibold no-underline border-b-2 whitespace-nowrap transition-colors ${activeSection === tab.id
                 ? 'text-[#dd6000] border-[#dd6000]'
                 : 'text-gray-500 border-transparent hover:text-gray-900'
-            }`}
+              }`}
             onClick={(e) => handleClick(e, tab.id)}
           >
             {tab.label}

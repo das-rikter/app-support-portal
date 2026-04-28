@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/useAppStore";
 import { AlertTriangle, Bug, Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,17 +11,20 @@ const navItems = [
   { href: "/incident-tracking", label: "Incident Tracking", icon: AlertTriangle },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ userPanel }: { userPanel?: React.ReactNode }) {
   const pathname = usePathname();
-  const { isSidebarOpen, toggleSidebar } = useAppStore();
 
   return (
     <aside
       className={cn(
-        "relative flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-200 ease-in-out shrink-0",
-        isSidebarOpen ? "w-56" : "w-14"
+        "flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shrink-0 w-64 h-screen sticky top-0"
       )}
     >
+      <div className="flex h-16 items-center px-4 pt-6 mb-5">
+        <Link href="/">
+          <img src="/das-logo.svg" alt="DAS Technology" loading="eager" width={160} height={48} className="w-full h-auto object-contain object-left" />
+        </Link>
+      </div>
       {/* Nav items */}
       <nav className="flex flex-col gap-1 p-2 pt-4 flex-1">
         {navItems.map(({ href, label, icon: Icon }) => {
@@ -31,29 +33,24 @@ export function AppSidebar() {
             <Link
               key={href}
               href={href}
-              title={!isSidebarOpen ? label : undefined}
-              onClick={() => { if (isSidebarOpen) toggleSidebar(); }}
+              title={label}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-2 py-1.5 text-md font-medium transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  : "text-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               )}
             >
               <Icon
-                className={cn("shrink-0", isActive ? "text-sidebar-accent-foreground" : "")}
-                size={18}
+                className={cn("shrink-0 h-4 w-4", isActive ? "text-sidebar-accent-foreground" : "")}
                 aria-hidden="true"
               />
-              {isSidebarOpen && (
-                <span className="truncate">{label}</span>
-              )}
+              <span className="truncate">{label}</span>
             </Link>
           );
         })}
       </nav>
-
-
+      {userPanel}
     </aside>
   );
 }

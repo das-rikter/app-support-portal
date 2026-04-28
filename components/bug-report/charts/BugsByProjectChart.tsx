@@ -5,10 +5,12 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useBugReportStore } from '@/store/useBugReportStore';
 import { getProductPalette } from '@/lib/chartUtils';
 
+const SECTION_LABEL = "flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-primary-clementine-900 pb-1 border-b-2 border-border before:content-[''] before:block before:w-0.75 before:h-3.5 before:bg-primary-clementine-900 before:rounded-sm before:shrink-0";
+
 export function BugsByProjectChart() {
   const bugs = useBugReportStore((s) => s.bugs);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const chartRef = useRef<Chart | null>(null);
+  const chartRef  = useRef<Chart | null>(null);
 
   const { labels, counts } = useMemo(() => {
     const projMap: Record<string, number> = {};
@@ -18,12 +20,7 @@ export function BugsByProjectChart() {
     const sorted = Object.entries(projMap).sort((a, b) => b[1] - a[1]);
     const labels = sorted.map(([p]) => {
       const s = p.replace(/^New /, '');
-      const abbr = s
-        .split(' ')
-        .map((w) => w[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 4);
+      const abbr = s.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 4);
       return `${s} (${abbr})`;
     });
     const counts = sorted.map(([, c]) => c);
@@ -37,15 +34,13 @@ export function BugsByProjectChart() {
       type: 'bar',
       data: {
         labels,
-        datasets: [
-          {
-            label: 'Open Bugs',
-            data: counts,
-            backgroundColor: labels.map((label) => getProductPalette(label)),
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-        ],
+        datasets: [{
+          label: 'Open Bugs',
+          data: counts,
+          backgroundColor: labels.map((label) => getProductPalette(label)),
+          borderRadius: 6,
+          borderSkipped: false,
+        }],
       },
       options: {
         indexAxis: 'y',
@@ -69,18 +64,16 @@ export function BugsByProjectChart() {
         },
       },
     });
-    return () => {
-      chartRef.current?.destroy();
-    };
+    return () => { chartRef.current?.destroy(); };
   }, [labels, counts]);
 
   return (
-    <section id="section-projects" className="report-section flex flex-col gap-4">
-      <div className="section-label">By Project</div>
-      <div className="bg-white rounded-xl border border-[var(--br-border)] shadow-sm p-6 flex flex-col gap-4">
+    <section id="section-projects" className="scroll-mt-14 flex flex-col gap-4">
+      <div className={SECTION_LABEL}>By Project</div>
+      <div className="bg-card rounded-xl border border-border shadow-xs p-6 flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="font-sans text-base font-bold">Open Bugs by Project</h2>
-          <span className="text-xs text-[var(--br-text-muted)]">
+          <span className="text-xs text-muted-foreground">
             Total open bug count per Jira project, sorted by volume
           </span>
         </div>
