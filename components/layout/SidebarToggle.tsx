@@ -13,9 +13,9 @@ export function SidebarToggle() {
       size="sm"
       onClick={toggleSidebar}
       aria-label={isSidebarOpen ? "Collapse navigation" : "Expand navigation"}
-      className="text-txt-neutral-100 hover:bg-primary-shuttle-gray-800 hover:text-white"
+      className="text-foreground hover:bg-primary-clementine-900 hover:text-white"
     >
-      <Menu size={18} aria-hidden="true" />
+      <Menu size={20} aria-hidden="true" />
     </Button>
   );
 }

@@ -1,78 +1,55 @@
 'use client';
 
+import { cn } from '@/lib/utils';
 import { useMemo, useState } from 'react';
 import { useBugReportStore } from '@/store/useBugReportStore';
 import type { Bug } from '@/types/bug-report';
 
+const SECTION_LABEL = "flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-primary-clementine-900 pb-1 border-b-2 border-border before:content-[''] before:block before:w-0.75 before:h-3.5 before:bg-primary-clementine-900 before:rounded-sm before:shrink-0";
+const TH = 'px-4 py-3 font-bold text-muted-foreground uppercase tracking-[0.05em] text-[0.68rem] border-b border-border whitespace-nowrap bg-muted text-center';
+const TD = 'px-4 py-3 border-b border-border text-[0.72rem] whitespace-nowrap';
+const BADGE_BASE = 'inline-block px-1.5 py-0 rounded-[0.25rem] text-[0.63rem] font-bold tracking-[0.04em] mr-2 align-middle';
+
 const PROJ_MAP: Record<string, string> = {
-  'Engage To Sell': 'Engage To Sell',
-  'New Response Path': 'Response Path',
-  'New BestRide': 'BestRide',
-  CDXP: 'CDXP',
-  'New Central APIs': "Central API's",
-  'New Credit Logix': 'Credit Logix',
-  'New Lot Vantage': 'Lot Vantage',
-  'New Media Logix': 'Media Logix',
-  'New Response Logix': 'Response Logix',
+  'Engage To Sell': 'Engage To Sell', 'New Response Path': 'Response Path',
+  'New BestRide': 'BestRide', CDXP: 'CDXP', 'New Central APIs': "Central API's",
+  'New Credit Logix': 'Credit Logix', 'New Lot Vantage': 'Lot Vantage',
+  'New Media Logix': 'Media Logix', 'New Response Logix': 'Response Logix',
   'New Social Logix': 'Social Logix',
 };
 
 const WBR_ORDER = [
-  'Engage To Sell',
-  'Response Path',
-  'BestRide',
-  'CDXP',
-  "Central API's",
-  'Credit Logix',
-  'Lot Vantage',
-  'Media Logix',
-  'Response Logix',
-  'Social Logix',
+  'Engage To Sell', 'Response Path', 'BestRide', 'CDXP', "Central API's",
+  'Credit Logix', 'Lot Vantage', 'Media Logix', 'Response Logix', 'Social Logix',
 ];
 
 const BADGE_MAP: Record<string, string> = {
-  'Engage To Sell': 'badge-ets',
-  'Response Path': 'badge-nrp',
-  BestRide: 'badge-nb',
-  CDXP: 'badge-cdxp',
-  "Central API's": 'badge-api',
-  'Credit Logix': 'badge-ncl',
-  'Lot Vantage': 'badge-nlv',
-  'Media Logix': 'badge-nml',
-  'Response Logix': 'badge-nrl',
-  'Social Logix': 'badge-nsl',
+  'Engage To Sell': 'bg-[#2c972c] text-white',
+  'Response Path':  'bg-[#7c589e] text-white',
+  BestRide:         'bg-[#1b6392] text-white',
+  CDXP:             'bg-[#8ea3c0] text-white',
+  "Central API's":  'bg-[#755f5f] text-white',
+  'Credit Logix':   'bg-[#884408] text-white',
+  'Lot Vantage':    'bg-[#6da164] text-white',
+  'Media Logix':    'bg-[#971d1d] text-white',
+  'Response Logix': 'bg-[#8a5252] text-white',
+  'Social Logix':   'bg-[#7e7188] text-white',
 };
 
 const ABBR_MAP: Record<string, string> = {
-  'Engage To Sell': 'ETS',
-  'Response Path': 'NRP',
-  BestRide: 'NB',
-  CDXP: 'CDXP',
-  "Central API's": 'API',
-  'Credit Logix': 'NCL',
-  'Lot Vantage': 'NLV',
-  'Media Logix': 'NML',
-  'Response Logix': 'NRL',
-  'Social Logix': 'NSL',
+  'Engage To Sell': 'ETS', 'Response Path': 'NRP', BestRide: 'NB', CDXP: 'CDXP',
+  "Central API's": 'API', 'Credit Logix': 'NCL', 'Lot Vantage': 'NLV',
+  'Media Logix': 'NML', 'Response Logix': 'NRL', 'Social Logix': 'NSL',
 };
 
 const PRIOS = ['Highest', 'High', 'Medium', 'Low', 'Lowest'] as const;
 type Prio = (typeof PRIOS)[number];
 
-interface GridRow {
-  total: number;
-  Highest: number;
-  High: number;
-  Medium: number;
-  Low: number;
-  Lowest: number;
-}
+interface GridRow { total: number; Highest: number; High: number; Medium: number; Low: number; Lowest: number; }
 
 function buildGrid(bugs: Bug[]): Record<string, GridRow> {
   const grid: Record<string, GridRow> = {};
-  WBR_ORDER.forEach((p) => {
-    grid[p] = { Highest: 0, High: 0, Medium: 0, Low: 0, Lowest: 0, total: 0 };
-  });
+  WBR_ORDER.forEach((p) => { grid[p] = { Highest: 0, High: 0, Medium: 0, Low: 0, Lowest: 0, total: 0 }; });
   bugs.forEach((b) => {
     const wbr = PROJ_MAP[b.project];
     if (!wbr || !grid[wbr]) return;
@@ -82,8 +59,12 @@ function buildGrid(bugs: Bug[]): Record<string, GridRow> {
   return grid;
 }
 
-function Cell({ n, cls }: { n: number; cls?: string }) {
-  return <td className={`text-center num-td${cls ? ` ${cls}` : ''}`}>{n > 0 ? n : '-'}</td>;
+function Cell({ n, critical, high }: { n: number; critical?: boolean; high?: boolean }) {
+  return (
+    <td className={cn(TD, 'text-center text-muted-foreground tabular-nums', critical && 'text-red-600! font-bold', high && 'text-orange-600! font-bold')}>
+      {n > 0 ? n : '-'}
+    </td>
+  );
 }
 
 export function StatusTable() {
@@ -111,86 +92,82 @@ export function StatusTable() {
   }, [grid]);
 
   return (
-    <section id="section-status-table" className="report-section flex flex-col gap-4">
-      <div className="section-label">Status Table</div>
-      <div className="bg-white rounded-xl border border-[var(--br-border)] shadow-sm p-6 flex flex-col gap-4">
+    <section id="section-status-table" className="scroll-mt-14 flex flex-col gap-4">
+      <div className={SECTION_LABEL}>Status Table</div>
+      <div className="bg-card rounded-xl border border-border shadow-xs p-6 flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="font-sans text-base font-bold">Bugs by Product &amp; Priority</h2>
-          <span className="text-xs text-[var(--br-text-muted)]">
+          <span className="text-xs text-muted-foreground">
             All open bugs grouped by product - excludes Won&rsquo;t Do
           </span>
         </div>
-        <div className="overflow-x-auto rounded-lg border border-[var(--br-border)]">
-          <table className="data-table status-table">
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="text-[0.72rem] w-full border-collapse">
             <thead>
               <tr>
-                <th>Product</th>
-                <th className="num-th text-center">Total</th>
-                <th className="num-th text-center">Highest</th>
-                <th className="num-th text-center">High</th>
-                <th className="num-th text-center">Medium</th>
-                <th className="num-th text-center">Low</th>
-                <th className="num-th text-center">Lowest</th>
+                <th className={cn(TH, 'text-left')}>Product</th>
+                <th className={TH}>Total</th>
+                <th className={TH}>Highest</th>
+                <th className={TH}>High</th>
+                <th className={TH}>Medium</th>
+                <th className={TH}>Low</th>
+                <th className={TH}>Lowest</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="group-header-row">
-                <td>
+              {/* AI Engage group header */}
+              <tr className="bg-muted border-t-2 border-t-primary-clementine-900">
+                <td className={cn(TD, 'font-semibold')}>
                   <span
-                    className={`group-toggle${collapsed ? ' collapsed' : ''}`}
+                    className={cn('cursor-pointer text-[0.7em] inline-block transition-transform duration-200 mr-1 text-primary-clementine-900', collapsed && '-rotate-90')}
                     onClick={() => setCollapsed((c) => !c)}
-                  >
-                    &#9660;
-                  </span>{' '}
+                  >&#9660;</span>
                   <strong>AI Engage Messaging</strong>
                 </td>
-                <td className="num-td bold text-center">{ai.total}</td>
-                <Cell n={ai.Highest} cls="critical-val" />
-                <Cell n={ai.High} cls="high-val" />
+                <td className={cn(TD, 'text-center font-bold text-foreground tabular-nums')}>{ai.total}</td>
+                <Cell n={ai.Highest} critical />
+                <Cell n={ai.High} high />
                 <Cell n={ai.Medium} />
                 <Cell n={ai.Low} />
                 <Cell n={ai.Lowest} />
               </tr>
+              {/* AI Engage children */}
               {['Engage To Sell', 'Response Path'].map((p) => (
-                <tr
-                  key={p}
-                  className="group-child"
-                  style={{ display: collapsed ? 'none' : undefined }}
-                >
-                  <td className="child-row">
-                    <span className={`proj-badge ${BADGE_MAP[p]}`}>{ABBR_MAP[p]}</span> {p}
+                <tr key={p} className="bg-card" style={{ display: collapsed ? 'none' : undefined }}>
+                  <td className={cn(TD, 'text-muted-foreground pl-8')}>
+                    <span className={cn(BADGE_BASE, BADGE_MAP[p])}>{ABBR_MAP[p]}</span>{p}
                   </td>
-                  <td className="num-td text-center">{grid[p]?.total ?? 0}</td>
-                  <Cell n={grid[p]?.Highest ?? 0} cls="critical-val" />
-                  <Cell n={grid[p]?.High ?? 0} cls="high-val" />
-                  <Cell n={grid[p]?.Medium ?? 0} />
-                  <Cell n={grid[p]?.Low ?? 0} />
-                  <Cell n={grid[p]?.Lowest ?? 0} />
+                  <td className={cn(TD, 'text-center text-muted-foreground tabular-nums')}>{grid[p]?.total ?? 0}</td>
+                  <Cell n={grid[p]?.Highest ?? 0} critical />
+                  <Cell n={grid[p]?.High    ?? 0} high />
+                  <Cell n={grid[p]?.Medium  ?? 0} />
+                  <Cell n={grid[p]?.Low     ?? 0} />
+                  <Cell n={grid[p]?.Lowest  ?? 0} />
                 </tr>
               ))}
-              {WBR_ORDER.filter((p) => !['Engage To Sell', 'Response Path'].includes(p)).map(
-                (p) => (
-                  <tr key={p}>
-                    <td>
-                      <span className={`proj-badge ${BADGE_MAP[p]}`}>{ABBR_MAP[p]}</span> {p}
-                    </td>
-                    <td className="num-td bold text-center">{grid[p]?.total ?? 0}</td>
-                    <Cell n={grid[p]?.Highest ?? 0} cls="critical-val" />
-                    <Cell n={grid[p]?.High ?? 0} cls="high-val" />
-                    <Cell n={grid[p]?.Medium ?? 0} />
-                    <Cell n={grid[p]?.Low ?? 0} />
-                    <Cell n={grid[p]?.Lowest ?? 0} />
-                  </tr>
-                )
-              )}
-              <tr className="total-row">
-                <td><strong>TOTALS</strong></td>
-                <td className="num-td bold text-center">{tots.total}</td>
-                <td className="num-td bold critical-val text-center">{tots.Highest || '-'}</td>
-                <td className="num-td bold high-val text-center">{tots.High || '-'}</td>
-                <td className="num-td bold text-center">{tots.Medium || '-'}</td>
-                <td className="num-td bold text-center">{tots.Low || '-'}</td>
-                <td className="num-td bold text-center">{tots.Lowest || '-'}</td>
+              {/* Remaining products */}
+              {WBR_ORDER.filter((p) => !['Engage To Sell', 'Response Path'].includes(p)).map((p) => (
+                <tr key={p} className="hover:bg-secondary/50">
+                  <td className={TD}>
+                    <span className={cn(BADGE_BASE, BADGE_MAP[p])}>{ABBR_MAP[p]}</span>{p}
+                  </td>
+                  <td className={cn(TD, 'text-center font-bold text-foreground tabular-nums')}>{grid[p]?.total ?? 0}</td>
+                  <Cell n={grid[p]?.Highest ?? 0} critical />
+                  <Cell n={grid[p]?.High    ?? 0} high />
+                  <Cell n={grid[p]?.Medium  ?? 0} />
+                  <Cell n={grid[p]?.Low     ?? 0} />
+                  <Cell n={grid[p]?.Lowest  ?? 0} />
+                </tr>
+              ))}
+              {/* Totals row */}
+              <tr className="bg-muted border-t-2 border-t-border">
+                <td className={cn(TD, 'font-bold text-foreground')}><strong>TOTALS</strong></td>
+                <td className={cn(TD, 'text-center font-bold text-foreground tabular-nums')}>{tots.total}</td>
+                <td className={cn(TD, 'text-center font-bold text-red-600 tabular-nums')}>{tots.Highest || '-'}</td>
+                <td className={cn(TD, 'text-center font-bold text-orange-600 tabular-nums')}>{tots.High || '-'}</td>
+                <td className={cn(TD, 'text-center font-bold text-muted-foreground tabular-nums')}>{tots.Medium || '-'}</td>
+                <td className={cn(TD, 'text-center font-bold text-muted-foreground tabular-nums')}>{tots.Low || '-'}</td>
+                <td className={cn(TD, 'text-center font-bold text-muted-foreground tabular-nums')}>{tots.Lowest || '-'}</td>
               </tr>
             </tbody>
           </table>

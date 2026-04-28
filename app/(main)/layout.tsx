@@ -1,16 +1,13 @@
-import { AppHeader } from "@/components/layout/AppHeader";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { SidebarUserInfo } from "@/components/layout/SidebarUserInfo";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col">
-      <AppHeader />
-      <div className="flex flex-1">
-        <AppSidebar />
-        <main className="flex-1 px-6 py-6">
-          {children}
-        </main>
-      </div>
+    <div className="flex h-screen overflow-hidden">
+      <AppSidebar userPanel={<SidebarUserInfo />} />
+      <main className="flex-1 overflow-y-auto px-6 pb-6">
+        {children}
+      </main>
     </div>
   );
 }

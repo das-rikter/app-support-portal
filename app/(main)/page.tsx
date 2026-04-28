@@ -3,10 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function HomePage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-6">
       <PageHeader
         title="Home"
-        description="Welcome to the App Support Portal."
+        description="Welcome to the Application Support Portal."
       />
       <Card>
         <CardHeader>

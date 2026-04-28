@@ -3,6 +3,8 @@
 import { useMemo } from 'react';
 import { useBugReportStore } from '@/store/useBugReportStore';
 
+const SECTION_LABEL = "flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-primary-clementine-900 pb-1 border-b-2 border-border before:content-[''] before:block before:w-0.75 before:h-3.5 before:bg-primary-clementine-900 before:rounded-sm before:shrink-0";
+
 export function LeadSection() {
   const bugs = useBugReportStore((s) => s.bugs);
 
@@ -34,12 +36,12 @@ export function LeadSection() {
   }, [bugs]);
 
   return (
-    <section id="section-leads" className="report-section flex flex-col gap-4">
-      <div className="section-label">By Lead</div>
-      <div className="bg-white rounded-xl border border-[var(--br-border)] shadow-sm p-6 flex flex-col gap-4">
+    <section id="section-leads" className="scroll-mt-14 flex flex-col gap-4">
+      <div className={SECTION_LABEL}>By Lead</div>
+      <div className="bg-card rounded-xl border border-border shadow-xs p-6 flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="font-sans text-base font-bold">Bugs by Project Lead</h2>
-          <span className="text-xs text-[var(--br-text-muted)]">
+          <span className="text-xs text-muted-foreground">
             Total open bug ownership across all projects
           </span>
         </div>
@@ -47,24 +49,24 @@ export function LeadSection() {
           {leads.map((l) => (
             <div
               key={l.lead}
-              className="bg-[var(--br-surface-2)] border border-[var(--br-border)] rounded-lg px-5 py-4 grid grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] gap-x-3 gap-y-1 items-center"
+              className="bg-secondary border border-border rounded-lg px-5 py-4 grid grid-cols-[auto_1fr_auto] grid-rows-[auto_auto] gap-x-3 gap-y-1 items-center"
             >
-              <div className="row-span-2 w-10 h-10 rounded-full bg-[var(--br-primary-light)] text-[var(--br-primary)] flex items-center justify-center font-sans font-extrabold text-xs tracking-[0.04em] shrink-0">
+              <div className="row-span-2 w-10 h-10 rounded-full bg-primary-clementine-50 text-primary-clementine-900 flex items-center justify-center font-sans font-extrabold text-xs tracking-[0.04em] shrink-0">
                 {l.initials}
               </div>
               <div className="col-start-2">
                 <div className="text-sm font-bold leading-tight">{l.lead}</div>
-                <div className="text-xs text-[var(--br-text-muted)]">{l.projects}</div>
+                <div className="text-xs text-muted-foreground">{l.projects}</div>
               </div>
               <div className="col-start-3 row-span-2 text-right">
-                <div className="font-sans text-[clamp(1.4rem,2vw,1.75rem)] font-extrabold text-[var(--br-primary)] tabular-nums leading-none">
+                <div className="font-sans text-[clamp(1.4rem,2vw,1.75rem)] font-extrabold text-primary-clementine-900 tabular-nums leading-none">
                   {l.count}
                 </div>
-                <div className="text-xs text-[var(--br-text-faint)]">{l.pct}%</div>
+                <div className="text-xs text-muted-foreground/70">{l.pct}%</div>
               </div>
-              <div className="col-span-3 h-1.5 bg-[var(--br-surface-offset)] rounded-full overflow-hidden">
+              <div className="col-span-3 h-1.5 bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[var(--br-primary)] rounded-full transition-[width] duration-1000"
+                  className="h-full bg-primary-clementine-900 rounded-full transition-[width] duration-1000"
                   style={{ width: `${l.barW}%` }}
                 />
               </div>
