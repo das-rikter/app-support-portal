@@ -19,7 +19,7 @@ export interface Incident {
   cause: string;
   reoccurring: 0 | 1;
   dasCaused: 0 | 1;
-  postmortem: 'Yes' | 'No' | 'N/A';
+  postmortem?: 'Yes' | 'No' | 'N/A';
 }
 
 export type IncidentView = 'overview' | 'products' | 'process' | 'incidents';

@@ -131,7 +131,7 @@ interface ParseError {
 function parseBooleanFlag(value: string, row: number, field: string, errors: ParseError[]): 0 | 1 {
   const normalized = value.trim().toLowerCase();
   if (['1', 'true', 'yes', 'y', 'on'].includes(normalized)) return 1;
-  if (normalized === '' || normalized === '0' || normalized === 'false' || normalized === 'n' || normalized === 'off') return 0;
+  if (['', '0', 'false', 'no', 'n', 'off'].includes(normalized)) return 0;
   errors.push({ row, field, value, message: `Invalid boolean value for ${field}: '${value}'` });
   return 0;
 }
@@ -139,7 +139,7 @@ function parseBooleanFlag(value: string, row: number, field: string, errors: Par
 function parseDasCaused(value: string, row: number, errors: ParseError[]): 0 | 1 {
   const normalized = value.trim().toLowerCase();
   if (['1', 'true', 'yes', 'y', 'on', 'internal', 'das caused', 'dascaused'].includes(normalized)) return 1;
-  if (normalized === '' || normalized === '0' || normalized === 'false' || normalized === 'n' || normalized === 'off' || normalized === 'external') return 0;
+  if (['', '0', 'false', 'no', 'n', 'off', 'external'].includes(normalized)) return 0;
   errors.push({ row, field: 'dasCaused', value, message: `Invalid ownership value for dasCaused: '${value}'` });
   return 0;
 }
@@ -212,7 +212,6 @@ export function parseIncidentsCSV(text: string): Incident[] {
       const alertedValue = (r['Was Alert Triggered to Inform DAS?'] || '').trim();
       const reoccurringValue = (r['Is This A Reoccurring Issue?'] || '').trim();
       const dasCausedValue = (r['DAS Caused?'] || '').trim();
-      const postmortemValue = (r['Postmortem Sent'] || '').trim();
 
       requireField(product, row, 'Product', errors);
       requireField(fn, row, 'Function', errors);
@@ -241,7 +240,6 @@ export function parseIncidentsCSV(text: string): Incident[] {
         cause: (r['Category Reason For Issue'] || '').trim(),
         reoccurring: parseBooleanFlag(reoccurringValue, row, 'reoccurring', errors),
         dasCaused: parseDasCaused(dasCausedValue, row, errors),
-        postmortem: parsePostmortem(postmortemValue, row, errors),
       };
     })
     .filter((i) => i.title.trim());

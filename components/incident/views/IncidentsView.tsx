@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useIncidentStore } from '@/store/useIncidentStore';
-import { parseOutageHrs, isMultiApp } from '@/lib/incidentUtils';
+import { parseOutageHrs } from '@/lib/incidentUtils';
 
 const TH = 'sticky top-0 z-[2] px-[14px] py-[10px] text-[11px] uppercase tracking-[0.08em] text-muted-foreground font-bold text-left border-b border-border whitespace-nowrap select-none bg-secondary';
 const TD = 'px-[14px] py-3 border-b border-border text-[13px] align-middle';
@@ -26,14 +26,13 @@ const controlCls = 'border border-border rounded-lg px-2 py-1.5 text-xs cursor-p
 
 export function IncidentsView() {
   const filtered = useIncidentStore((s) => s.filtered);
-  const singleApp = useMemo(() => filtered.filter((d) => !isMultiApp(d.product)), [filtered]);
   const [search, setSearch] = useState('');
   const [sortCol, setSortCol] = useState<'date' | 'product' | 'severity' | 'downtime'>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const rows = useMemo(() => {
     const q = search.toLowerCase();
-    let r = singleApp.filter(
+    let r = filtered.filter(
       (d) =>
         !q ||
         d.title.toLowerCase().includes(q) ||
@@ -96,7 +95,6 @@ export function IncidentsView() {
               <th className={TH}>Ownership</th>
               <th className={TH}>Alert</th>
               <th className={TH}>Reoccurring</th>
-              <th className={TH}>Postmortem</th>
             </tr>
           </thead>
           <tbody>
@@ -112,7 +110,6 @@ export function IncidentsView() {
                 <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.external}>{d.dasCaused ? 'Internal' : 'External'}</span></td>
                 <td className={TD}><span className={d.alerted ? CHIP.yes : CHIP.no}>{d.alerted ? 'Yes' : 'No'}</span></td>
                 <td className={TD}><span className={d.reoccurring ? CHIP.yes : CHIP.no}>{d.reoccurring ? 'Yes' : 'No'}</span></td>
-                <td className={TD}><span className={d.postmortem === 'Yes' ? CHIP.yes : d.postmortem === 'N/A' ? CHIP.na : CHIP.no}>{d.postmortem || '—'}</span></td>
               </tr>
             ))}
           </tbody>

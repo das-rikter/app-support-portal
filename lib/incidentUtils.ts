@@ -65,12 +65,12 @@ export function chartBase(extraMargin: Record<string, number> = {}): object {
     margin: { l: 20, r: 20, t: 10, b: 40, ...extraMargin },
     xaxis: {
       gridcolor: 'var(--id-border)',
-      tickfont: { color: 'var(--id-muted)' },
+      tickfont: { color: 'var(--id-text)' },
       zeroline: false,
     },
     yaxis: {
       gridcolor: 'var(--id-border)',
-      tickfont: { color: 'var(--id-muted)' },
+      tickfont: { color: 'var(--id-text)' },
       zeroline: false,
     },
     showlegend: false,

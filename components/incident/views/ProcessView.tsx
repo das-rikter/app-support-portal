@@ -79,7 +79,7 @@ function buildAlertCoverageChart(data: Incident[], allMonths: string[]) {
     ],
     layout: {
       ...chartBase({ l: 50, r: 20, t: 10, b: 40 }),
-      yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false, ticksuffix: '%', range: [0, 110] },
+      yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-text)' }, zeroline: false, ticksuffix: '%', range: [0, 110] },
       showlegend: true,
       legend: { x: 0.6, y: 1.1, font: { color: 'var(--id-muted)', size: 11 } },
     },
@@ -115,8 +115,8 @@ function buildMttrChart(data: Incident[]) {
     }],
     layout: {
       ...chartBase({ l: autoMargin, r: 80, t: 10, b: 40 }),
-      xaxis: { type: 'log', gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false, ticksuffix: 'h', automargin: true },
-      yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-muted)' }, zeroline: false, automargin: true },
+      xaxis: { type: 'log', gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-text)' }, zeroline: false, ticksuffix: 'h', automargin: true },
+      yaxis: { gridcolor: 'var(--id-border)', tickfont: { color: 'var(--id-text)' }, zeroline: false, automargin: true },
     },
   };
 }
@@ -130,8 +130,6 @@ function kpis(data: Incident[]) {
     alertPct: Math.round((alertedCount / Math.max(total, 1)) * 100),
     reoccurN: data.filter((d) => d.reoccurring === 1).length,
     dasCausedN: data.filter((d) => d.dasCaused === 1).length,
-    postYes: data.filter((d) => d.postmortem === 'Yes').length,
-    postPct: Math.round((data.filter((d) => d.postmortem === 'Yes').length / Math.max(total, 1)) * 100),
   };
 }
 
@@ -164,7 +162,7 @@ function KpiCard({ accent, children }: { accent: 'accent' | 'blue' | 'green' | '
 
 function KpiSection({ sa, label }: { sa: ReturnType<typeof kpis>; label: string }) {
   return (
-    <div className="grid grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-3 gap-4 mb-6">
       <KpiCard accent="green">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 bg-[rgba(22,163,74,0.12)] dark:bg-[rgba(22,163,74,0.18)]">
           <svg className="w-4 h-4 text-[#16a34a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -194,16 +192,6 @@ function KpiSection({ sa, label }: { sa: ReturnType<typeof kpis>; label: string 
         <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">DAS Caused</div>
         <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{sa.dasCausedN}</div>
         <div className="mt-2 text-xs text-muted-foreground">{Math.round((sa.dasCausedN / Math.max(sa.total, 1)) * 100)}% of incidents</div>
-      </KpiCard>
-      <KpiCard accent="blue">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 bg-[rgba(59,130,246,0.12)] dark:bg-[rgba(59,130,246,0.18)]">
-          <svg className="w-4 h-4 text-[#3b82f6]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-          </svg>
-        </div>
-        <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">Postmortem Rate</div>
-        <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{sa.postPct}%</div>
-        <div className="mt-2 text-xs text-muted-foreground">{sa.postYes} completed</div>
       </KpiCard>
     </div>
   );
