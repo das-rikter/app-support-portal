@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { AlertTriangle, Bug, Home } from "lucide-react";
+import { Activity, AlertTriangle, Bug, Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,6 +9,7 @@ const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/weekly-bug-report", label: "Weekly Bug Report", icon: Bug },
   { href: "/incident-tracking", label: "Incident Tracking", icon: AlertTriangle },
+  { href: "/status", label: "Platform Status", icon: Activity },
 ];
 
 export function AppSidebar({ userPanel }: { userPanel?: React.ReactNode }) {
