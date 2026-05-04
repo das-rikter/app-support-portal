@@ -526,7 +526,7 @@ export function OverviewView() {
             <div className="max-h-120 overflow-auto">
               <table className="w-full border-collapse">
                 <thead><tr>
-                  {['Date','Month','Products Affected','Function','Sev','Incident Title','Outage','Downtime','Root Cause','Ownership','Alert','Alerted Via','Reoccurring','DAS Caused','Postmortem'].map((h) => (
+                  {['Date','Month','Products Affected','Function','Sev','Incident Title','Outage','Downtime','Root Cause','Ownership','Alert','Alerted Via','Reoccurring','DAS Caused'].map((h) => (
                     <th key={h} className={TH}>{h}</th>
                   ))}
                 </tr></thead>

@@ -8,8 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { parseIncidentsCSV } from '@/lib/csvParser';
-import { getMonths, getProducts } from '@/lib/incidentUtils';
+import { parseIncidentsCSV, parseIncidentsXLSX } from '@/lib/csvParser';
+import type { XLSXParseResult } from '@/lib/csvParser';
+import { getMonths, getProducts, getYears } from '@/lib/incidentUtils';
 import { useIncidentStore } from '@/store/useIncidentStore';
 import type { Incident } from '@/types/incident';
 import { CheckCircle2, FileText } from 'lucide-react';
@@ -45,12 +46,15 @@ export function FilterBar() {
 
   const [pending, setPending] = useState<Incident[] | null>(null);
   const [pendingName, setPendingName] = useState('');
+  const [pendingSheets, setPendingSheets] = useState<XLSXParseResult['sheets']>([]);
+  const [pendingSkipped, setPendingSkipped] = useState<XLSXParseResult['skipped']>([]);
   const [dialogState, setDialogState] = useState<'closed' | 'verify' | 'success' | 'error'>('closed');
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  const ALL_YEARS = getYears(incidents);
   const ALL_MONTHS = getMonths(incidents);
   const ALL_PRODUCTS = getProducts(incidents);
-  const hasFilters = filters.month || filters.product || filters.severity || filters.ownership;
+  const hasFilters = filters.year !== String(new Date().getFullYear()) || filters.month || filters.product || filters.severity || filters.ownership;
 
   const selectClass =
     'border border-sidebar-border rounded-md px-3 py-1.5 text-sm bg-background text-foreground focus:outline-none focus:border-[#d66a06] cursor-pointer';
@@ -58,12 +62,21 @@ export function FilterBar() {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
     const reader = new FileReader();
-    reader.onload = (e) => {
+
+    reader.onload = async (e) => {
       try {
-        const text = e.target?.result as string;
-        const parsed = parseIncidentsCSV(text);
-        setPending(parsed);
+        if (isExcel) {
+          const result = await parseIncidentsXLSX(e.target?.result as ArrayBuffer);
+          setPending(result.incidents);
+          setPendingSheets(result.sheets);
+          setPendingSkipped(result.skipped);
+        } else {
+          setPending(parseIncidentsCSV(e.target?.result as string));
+          setPendingSheets([]);
+          setPendingSkipped([]);
+        }
         setPendingName(file.name);
         setUploadError(null);
         setDialogState('verify');
@@ -80,7 +93,12 @@ export function FilterBar() {
       setPending(null);
       setDialogState('error');
     };
-    reader.readAsText(file);
+
+    if (isExcel) {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file);
+    }
   };
 
   const handleConfirm = () => {
@@ -99,6 +117,20 @@ export function FilterBar() {
   return (
     <div className="flex flex-wrap gap-3 mb-4 items-center mt-6 justify-between">
       <div className="flex flex-wrap gap-3 items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Year</span>
+          <select
+            className={selectClass}
+            value={filters.year}
+            onChange={(e) => setFilters({ year: e.target.value, month: '' })}
+          >
+            <option value="">All years</option>
+            {ALL_YEARS.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Month</span>
           <select
@@ -166,7 +198,7 @@ export function FilterBar() {
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Upload CSV</span>
           <input
             type="file"
-            accept=".csv"
+            accept=".csv,.xlsx,.xls"
             onChange={handleFileUpload}
             className="text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#d66a06] file:text-white hover:file:bg-[#b85505] cursor-pointer"
           />
@@ -244,6 +276,27 @@ export function FilterBar() {
                   ))}
                 </div>
               </div>
+
+              {/* Sheets (Excel only) */}
+              {pendingSheets.length > 0 && (
+                <div className="rounded-lg p-3 bg-secondary border border-border">
+                  <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">
+                    Sheets Loaded ({pendingSheets.length})
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {pendingSheets.map((s) => (
+                      <span key={s.name} className="text-xs font-medium px-2 py-0.5 rounded-full bg-[rgba(59,130,246,0.10)] dark:bg-[rgba(59,130,246,0.18)] text-[#3b82f6]">
+                        {s.name} ({s.rows})
+                      </span>
+                    ))}
+                  </div>
+                  {pendingSkipped.length > 0 && (
+                    <div className="mt-2 text-[11px] text-muted-foreground">
+                      Skipped: {pendingSkipped.map((s) => s.name).join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex gap-2 pt-1">
                 <Button variant="outline" className="flex-1" onClick={handleClose}>

@@ -1,9 +1,12 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { Incident, IncidentView } from '@/types/incident';
-import { INCIDENTS } from '@/lib/incidentData';
+import { extractYear } from '@/lib/incidentUtils';
+
+const CURRENT_YEAR = String(new Date().getFullYear());
 
 interface IncidentFilters {
+  year: string;
   month: string;
   product: string;
   severity: string;
@@ -22,6 +25,7 @@ interface IncidentState {
 }
 
 const DEFAULT_FILTERS: IncidentFilters = {
+  year: CURRENT_YEAR,
   month: '',
   product: '',
   severity: '',
@@ -30,6 +34,9 @@ const DEFAULT_FILTERS: IncidentFilters = {
 
 function applyFilters(incidents: Incident[], filters: IncidentFilters): Incident[] {
   return incidents.filter((d) => {
+    if (filters.year) {
+      if (extractYear(d.date ?? '') !== filters.year) return false;
+    }
     if (filters.month && d.month !== filters.month) return false;
     if (filters.product && d.product !== filters.product) return false;
     if (filters.severity && d.sev !== filters.severity) return false;
@@ -59,13 +66,15 @@ export const useIncidentStore = create<IncidentState>()(
         }),
 
       resetFilters: () =>
-        set((s) => ({ filters: DEFAULT_FILTERS, filtered: [...s.incidents] })),
+        set((s) => ({ filters: DEFAULT_FILTERS, filtered: applyFilters(s.incidents, DEFAULT_FILTERS) })),
 
       setIncidents: (incidents) =>
-        set((s) => ({
-          incidents,
-          filtered: applyFilters(incidents, s.filters),
-        })),
+        set((s) => {
+          const years = [...new Set(incidents.map((d) => extractYear(d.date ?? '')).filter(Boolean))].sort();
+          const defaultYear = years[years.length - 1] || CURRENT_YEAR;
+          const filters = { ...s.filters, year: defaultYear };
+          return { incidents, filters, filtered: applyFilters(incidents, filters) };
+        }),
     }),
     { name: 'IncidentStore' }
   )
