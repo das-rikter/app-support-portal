@@ -195,7 +195,7 @@ export function FilterBar() {
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Upload CSV</span>
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Upload</span>
           <input
             type="file"
             accept=".csv,.xlsx,.xls"
