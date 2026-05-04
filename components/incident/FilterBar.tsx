@@ -12,6 +12,7 @@ import { parseIncidentsCSV } from '@/lib/csvParser';
 import { getMonths, getProducts } from '@/lib/incidentUtils';
 import { useIncidentStore } from '@/store/useIncidentStore';
 import type { Incident } from '@/types/incident';
+import { cn } from '@/lib/utils';
 import { CheckCircle2, FileText } from 'lucide-react';
 import { useState } from 'react';
 
@@ -162,15 +163,26 @@ export function FilterBar() {
           Reset
         </button>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Upload CSV</span>
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleFileUpload}
-            className="text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#d66a06] file:text-white hover:file:bg-[#b85505] cursor-pointer"
-          />
-        </div>
+        <label className={cn(
+          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer whitespace-nowrap border select-none transition-[background,border-color,transform] duration-150 hover:-translate-y-px active:translate-y-0',
+          incidents.length > 0
+            ? 'bg-[rgba(22,163,74,0.15)] border-[rgba(22,163,74,0.5)] text-[#15803d] hover:bg-[rgba(22,163,74,0.22)] hover:border-[#16a34a]'
+            : 'bg-[rgba(212,97,10,0.18)] text-[#c75c00] border-[rgba(212,97,10,0.45)] hover:bg-[rgba(212,97,10,0.28)] hover:border-[#d4610a]'
+        )}>
+          {incidents.length > 0 ? (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          )}
+          {incidents.length > 0 ? `✓ ${incidents.length} incidents loaded` : 'Upload CSV'}
+          <input type="file" accept=".csv" hidden onChange={handleFileUpload} />
+        </label>
 
         {hasFilters && (
           <span className="text-sm text-muted-foreground font-semibold ml-1">
