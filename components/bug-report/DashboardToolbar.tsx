@@ -1,7 +1,7 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { parseMainCSV, parseWeeklyCSV } from '@/lib/csvParser';
+import { cn } from '@/lib/utils';
 import { useBugReportStore } from '@/store/useBugReportStore';
 import { useRef } from 'react';
 
@@ -76,24 +76,24 @@ export function DashboardToolbar() {
 
   function weeklyBtnLabel() {
     switch (uploadState.weeklyPhase) {
-      case 'reading':   return 'Reading…';
+      case 'reading': return 'Reading…';
       case 'verifying': return 'Verifying…';
-      case 'staged':    return `✓ ${uploadState.staged.weeklyRows?.length ?? 0} bugs verified`;
-      default:          return 'Weekly CSV';
+      case 'staged': return `✓ ${uploadState.staged.weeklyRows?.length ?? 0} bugs verified`;
+      default: return 'Weekly CSV';
     }
   }
 
   function mainBtnLabel() {
     switch (uploadState.mainPhase) {
-      case 'reading':   return 'Reading…';
+      case 'reading': return 'Reading…';
       case 'verifying': return 'Verifying…';
-      case 'staged':    return `✓ ${uploadState.staged.mainRows?.length ?? 0} bugs verified`;
-      default:          return 'Full Bug List';
+      case 'staged': return `✓ ${uploadState.staged.mainRows?.length ?? 0} bugs verified`;
+      default: return 'Full Bug List';
     }
   }
 
   const weeklyLoading = uploadState.weeklyPhase === 'reading' || uploadState.weeklyPhase === 'verifying';
-  const mainLoading   = uploadState.mainPhase   === 'reading' || uploadState.mainPhase   === 'verifying';
+  const mainLoading = uploadState.mainPhase === 'reading' || uploadState.mainPhase === 'verifying';
 
   return (
     <div className="flex items-center gap-3 flex-wrap mb-6 mt-6">
@@ -116,7 +116,7 @@ export function DashboardToolbar() {
       </label>
 
       <button
-        className={cn(BTN_BASE, 'bg-secondary text-muted-foreground border-border hover:bg-muted hover:border-[#a0aab8]')}
+        className={cn(BTN_BASE, 'bg-secondary text-muted-foreground border-border hover:bg-muted hover:border-[#a0aab8] bg-blue-700')}
         title="Download dashboard as PDF"
         onClick={handlePdfClick}
       >
