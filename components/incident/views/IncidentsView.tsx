@@ -2,18 +2,37 @@
 
 import { useMemo, useState } from 'react';
 import { useIncidentStore } from '@/store/useIncidentStore';
-import { parseOutageHrs, isMultiApp } from '@/lib/incidentUtils';
+import { parseOutageHrs } from '@/lib/incidentUtils';
+
+const TH = 'sticky top-0 z-[2] px-[14px] py-[10px] text-[11px] uppercase tracking-[0.08em] text-muted-foreground font-bold text-left border-b border-border whitespace-nowrap select-none bg-secondary';
+const TD = 'px-[14px] py-3 border-b border-border text-[13px] align-middle';
+
+const SEV_CLASS: Record<string, string> = {
+  P1: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-extrabold tracking-[0.04em] bg-[rgba(220,38,38,0.12)] text-[#dc2626] dark:bg-[rgba(220,38,38,0.18)]',
+  P2: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-extrabold tracking-[0.04em] bg-[rgba(217,119,6,0.12)] text-[#d97706] dark:bg-[rgba(217,119,6,0.18)]',
+  P3: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-extrabold tracking-[0.04em] bg-[rgba(59,130,246,0.12)] text-[#3b82f6] dark:bg-[rgba(59,130,246,0.18)]',
+  P4: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-extrabold tracking-[0.04em] bg-[rgba(22,163,74,0.12)] text-[#16a34a] dark:bg-[rgba(22,163,74,0.18)]',
+};
+
+const CHIP: Record<string, string> = {
+  internal: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(214,106,6,0.10)] text-[#d66a06] dark:bg-[rgba(214,106,6,0.18)]',
+  external: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(59,130,246,0.12)] text-[#3b82f6] dark:bg-[rgba(59,130,246,0.18)]',
+  yes:      'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(22,163,74,0.12)] text-[#16a34a] dark:bg-[rgba(22,163,74,0.18)]',
+  no:       'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(107,114,128,0.12)] text-muted-foreground',
+  na:       'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(107,114,128,0.08)] text-muted-foreground',
+};
+
+const controlCls = 'border border-border rounded-lg px-2 py-1.5 text-xs cursor-pointer focus:outline-none bg-secondary text-foreground';
 
 export function IncidentsView() {
   const filtered = useIncidentStore((s) => s.filtered);
-  const singleApp = useMemo(() => filtered.filter((d) => !isMultiApp(d.product)), [filtered]);
   const [search, setSearch] = useState('');
   const [sortCol, setSortCol] = useState<'date' | 'product' | 'severity' | 'downtime'>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const rows = useMemo(() => {
     const q = search.toLowerCase();
-    let r = singleApp.filter(
+    let r = filtered.filter(
       (d) =>
         !q ||
         d.title.toLowerCase().includes(q) ||
@@ -34,16 +53,12 @@ export function IncidentsView() {
     return r;
   }, [singleApp, search, sortCol, sortDir]);
 
-  const sevClass: Record<string, string> = {
-    P1: 'id-sev id-sev-p1', P2: 'id-sev id-sev-p2', P3: 'id-sev id-sev-p3', P4: 'id-sev id-sev-p4',
-  };
-
   return (
-    <div className="border rounded-2xl overflow-hidden" style={{ background: 'var(--id-surface)', borderColor: 'var(--id-border)', boxShadow: 'var(--id-shadow-sm)' }}>
+    <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
       <div className="flex justify-between items-center px-5 pt-4 pb-3 gap-3">
         <div>
-          <div className="text-sm font-bold" style={{ color: 'var(--id-text)' }}>All Incidents</div>
-          <div className="text-xs mt-0.5" style={{ color: 'var(--id-muted)' }}>Full incident log with search and filters</div>
+          <div className="text-sm font-bold text-foreground">All Incidents</div>
+          <div className="text-xs mt-0.5 text-muted-foreground">Full incident log with search and filters</div>
         </div>
         <div className="flex gap-2 items-center">
           <input
@@ -51,70 +66,57 @@ export function IncidentsView() {
             placeholder="Search incidents…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border rounded-lg px-3 py-1.5 text-sm w-56 focus:outline-none focus:border-[#d66a06]"
-            style={{ borderColor: 'var(--id-border)', background: 'var(--id-surface2)', color: 'var(--id-text)' }}
+            className="border border-border rounded-lg px-3 py-1.5 text-sm w-56 focus:outline-none focus:border-[#d66a06] bg-secondary text-foreground"
           />
-          <select
-            value={sortCol}
-            onChange={(e) => setSortCol(e.target.value as typeof sortCol)}
-            className="border rounded-lg px-2 py-1.5 text-xs cursor-pointer focus:outline-none"
-            style={{ borderColor: 'var(--id-border)', background: 'var(--id-surface)', color: 'var(--id-text)' }}
-          >
+          <select value={sortCol} onChange={(e) => setSortCol(e.target.value as typeof sortCol)} className={controlCls}>
             <option value="date">Sort: Date</option>
             <option value="product">Sort: Product</option>
             <option value="severity">Sort: Severity</option>
             <option value="downtime">Sort: Downtime hrs</option>
           </select>
-          <select
-            value={sortDir}
-            onChange={(e) => setSortDir(e.target.value as 'asc' | 'desc')}
-            className="border rounded-lg px-2 py-1.5 text-xs cursor-pointer focus:outline-none"
-            style={{ borderColor: 'var(--id-border)', background: 'var(--id-surface)', color: 'var(--id-text)' }}
-          >
+          <select value={sortDir} onChange={(e) => setSortDir(e.target.value as 'asc' | 'desc')} className={controlCls}>
             <option value="desc">Desc</option>
             <option value="asc">Asc</option>
           </select>
         </div>
       </div>
 
-      <div className="id-table-wrap">
-        <table>
+      <div className="max-h-120 overflow-auto">
+        <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Product</th>
-              <th>Function</th>
-              <th>Sev</th>
-              <th>Incident</th>
-              <th>Outage</th>
-              <th>Cause</th>
-              <th>Ownership</th>
-              <th>Alert</th>
-              <th>Reoccurring</th>
-              <th>Postmortem</th>
+              <th className={TH}>Date</th>
+              <th className={TH}>Product</th>
+              <th className={TH}>Function</th>
+              <th className={TH}>Sev</th>
+              <th className={TH}>Incident</th>
+              <th className={TH}>Outage</th>
+              <th className={TH}>Cause</th>
+              <th className={TH}>Ownership</th>
+              <th className={TH}>Alert</th>
+              <th className={TH}>Reoccurring</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((d, i) => (
-              <tr key={i}>
-                <td className="id-outage-dur" style={{ whiteSpace: 'nowrap', color: 'var(--id-muted)' }}>{d.date}</td>
-                <td style={{ fontWeight: 600, fontSize: 13 }}>{d.product}</td>
-                <td style={{ color: 'var(--id-muted)', fontSize: 12 }}>{d.fn}</td>
-                <td><span className={sevClass[d.sev]}>{d.sev}</span></td>
-                <td style={{ maxWidth: 240, fontSize: 13 }}>{d.title}</td>
-                <td className="id-outage-dur">{d.downtime || '—'}</td>
-                <td style={{ color: 'var(--id-muted)', fontSize: 12 }}>{d.cause || '—'}</td>
-                <td><span className={d.dasCaused ? 'id-chip id-chip-internal' : 'id-chip id-chip-external'}>{d.dasCaused ? 'Internal' : 'External'}</span></td>
-                <td><span className={d.alerted ? 'id-chip id-chip-yes' : 'id-chip id-chip-no'}>{d.alerted ? 'Yes' : 'No'}</span></td>
-                <td><span className={d.reoccurring ? 'id-chip id-chip-yes' : 'id-chip id-chip-no'}>{d.reoccurring ? 'Yes' : 'No'}</span></td>
-                <td><span className={d.postmortem === 'Yes' ? 'id-chip id-chip-yes' : d.postmortem === 'N/A' ? 'id-chip id-chip-na' : 'id-chip id-chip-no'}>{d.postmortem || '—'}</span></td>
+              <tr key={i} className="hover:bg-secondary/50">
+                <td className={TD + ' tabular-nums text-xs font-medium text-muted-foreground whitespace-nowrap'}>{d.date}</td>
+                <td className={TD + ' font-semibold'}>{d.product}</td>
+                <td className={TD + ' text-muted-foreground text-xs'}>{d.fn}</td>
+                <td className={TD}><span className={SEV_CLASS[d.sev]}>{d.sev}</span></td>
+                <td className={TD + ' max-w-60'}>{d.title}</td>
+                <td className={TD + ' tabular-nums text-xs font-medium'}>{d.downtime || '—'}</td>
+                <td className={TD + ' text-muted-foreground text-xs'}>{d.cause || '—'}</td>
+                <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.external}>{d.dasCaused ? 'Internal' : 'External'}</span></td>
+                <td className={TD}><span className={d.alerted ? CHIP.yes : CHIP.no}>{d.alerted ? 'Yes' : 'No'}</span></td>
+                <td className={TD}><span className={d.reoccurring ? CHIP.yes : CHIP.no}>{d.reoccurring ? 'Yes' : 'No'}</span></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <div className="flex justify-between px-5 py-2.5 text-xs border-t" style={{ borderColor: 'var(--id-border)', color: 'var(--id-muted)' }}>
+      <div className="flex justify-between px-5 py-2.5 text-xs border-t border-border text-muted-foreground">
         <span>{rows.length} incidents shown</span>
         <span>DAS Incident Log · 2025</span>
       </div>

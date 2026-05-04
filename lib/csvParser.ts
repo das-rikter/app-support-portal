@@ -131,7 +131,7 @@ interface ParseError {
 function parseBooleanFlag(value: string, row: number, field: string, errors: ParseError[]): 0 | 1 {
   const normalized = value.trim().toLowerCase();
   if (['1', 'true', 'yes', 'y', 'on'].includes(normalized)) return 1;
-  if (normalized === '' || normalized === '0' || normalized === 'false' || normalized === 'n' || normalized === 'off') return 0;
+  if (['', '0', 'false', 'no', 'n', 'off'].includes(normalized)) return 0;
   errors.push({ row, field, value, message: `Invalid boolean value for ${field}: '${value}'` });
   return 0;
 }
@@ -139,7 +139,7 @@ function parseBooleanFlag(value: string, row: number, field: string, errors: Par
 function parseDasCaused(value: string, row: number, errors: ParseError[]): 0 | 1 {
   const normalized = value.trim().toLowerCase();
   if (['1', 'true', 'yes', 'y', 'on', 'internal', 'das caused', 'dascaused'].includes(normalized)) return 1;
-  if (normalized === '' || normalized === '0' || normalized === 'false' || normalized === 'n' || normalized === 'off' || normalized === 'external') return 0;
+  if (['', '0', 'false', 'no', 'n', 'off', 'external'].includes(normalized)) return 0;
   errors.push({ row, field: 'dasCaused', value, message: `Invalid ownership value for dasCaused: '${value}'` });
   return 0;
 }
@@ -195,14 +195,11 @@ function normalizeMonth(raw: string): string {
   return MONTH_NORMALIZE[key] ?? raw.trim();
 }
 
-export function parseIncidentsCSV(text: string): Incident[] {
-  const rows = parseCSVRaw(text);
-  if (!rows.length) throw new Error('No incidents found in file.');
-
+function parseIncidentRows(rows: Record<string, string>[], rowOffset = 1): Incident[] {
   const errors: ParseError[] = [];
   const incidents = rows
     .map((r, index) => {
-      const row = index + 2;
+      const row = index + rowOffset + 1;
       const product = (r['Product'] || '').trim();
       const fn = (r['Function'] || '').trim();
       const title = (r['Incident Title'] || '').trim();
@@ -212,7 +209,6 @@ export function parseIncidentsCSV(text: string): Incident[] {
       const alertedValue = (r['Was Alert Triggered to Inform DAS?'] || '').trim();
       const reoccurringValue = (r['Is This A Reoccurring Issue?'] || '').trim();
       const dasCausedValue = (r['DAS Caused?'] || '').trim();
-      const postmortemValue = (r['Postmortem Sent'] || '').trim();
 
       requireField(product, row, 'Product', errors);
       requireField(fn, row, 'Function', errors);
@@ -241,17 +237,101 @@ export function parseIncidentsCSV(text: string): Incident[] {
         cause: (r['Category Reason For Issue'] || '').trim(),
         reoccurring: parseBooleanFlag(reoccurringValue, row, 'reoccurring', errors),
         dasCaused: parseDasCaused(dasCausedValue, row, errors),
-        postmortem: parsePostmortem(postmortemValue, row, errors),
       };
     })
     .filter((i) => i.title.trim());
 
   if (errors.length) {
-    const message = errors
-      .map((error) => `Row ${error.row}: ${error.message}`)
-      .join('\n');
-    throw new Error(`CSV validation failed:\n${message}`);
+    throw new Error(`Validation failed:\n${errors.map((e) => `Row ${e.row}: ${e.message}`).join('\n')}`);
   }
 
   return incidents;
+}
+
+export function parseIncidentsCSV(text: string): Incident[] {
+  const rows = parseCSVRaw(text);
+  if (!rows.length) throw new Error('No incidents found in file.');
+  return parseIncidentRows(rows);
+}
+
+export interface XLSXParseResult {
+  incidents: Incident[];
+  sheets: { name: string; rows: number }[];
+  skipped: { name: string; reason: string }[];
+}
+
+export async function parseIncidentsXLSX(buffer: ArrayBuffer): Promise<XLSXParseResult> {
+  let xlsxModule;
+  try {
+    xlsxModule = await import('xlsx');
+  } catch {
+    throw new Error('Could not load Excel parser. Try saving the file as CSV and uploading that instead.');
+  }
+
+  const { read, utils } = xlsxModule;
+
+  const wb = read(new Uint8Array(buffer), { type: 'array', cellDates: false, raw: false });
+
+  if (!wb.SheetNames.length) throw new Error('The workbook appears to be empty.');
+
+  const allRows: Record<string, string>[] = [];
+  const sheets: { name: string; rows: number }[] = [];
+  const skipped: { name: string; reason: string }[] = [];
+
+  // Known incident column names used to identify the header row
+  const INCIDENT_COLS = ['product', 'incident title', 'month', 'outage start date', 'function'];
+
+  for (const sheetName of wb.SheetNames) {
+    const sheet = wb.Sheets[sheetName];
+
+    // Read as raw arrays to locate the real header row regardless of title rows above it
+    const rawArrays = utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '', raw: false }) as string[][];
+
+    if (!rawArrays.length) {
+      skipped.push({ name: sheetName, reason: 'empty sheet' });
+      continue;
+    }
+
+    // Score each row by how many known incident column names it contains
+    let bestIdx = -1;
+    let bestScore = 0;
+    for (let i = 0; i < Math.min(rawArrays.length, 15); i++) {
+      const row = rawArrays[i];
+      const score = row.filter((cell) =>
+        INCIDENT_COLS.some((col) => String(cell).trim().toLowerCase().includes(col))
+      ).length;
+      if (score > bestScore) { bestScore = score; bestIdx = i; }
+    }
+
+    if (bestIdx === -1 || bestScore < 1) {
+      skipped.push({ name: sheetName, reason: 'no recognizable incident columns found' });
+      continue;
+    }
+
+    const headers = rawArrays[bestIdx].map((h) => String(h).trim());
+    const sheetRows: Record<string, string>[] = [];
+
+    for (let i = bestIdx + 1; i < rawArrays.length; i++) {
+      const rowArr = rawArrays[i];
+      const obj: Record<string, string> = {};
+      headers.forEach((h, j) => { if (h) obj[h] = String(rowArr[j] ?? '').trim(); });
+      if (obj['Product']) sheetRows.push(obj);
+    }
+
+    if (!sheetRows.length) {
+      skipped.push({ name: sheetName, reason: 'header found but no data rows' });
+      continue;
+    }
+
+    sheets.push({ name: sheetName, rows: sheetRows.length });
+    allRows.push(...sheetRows);
+  }
+
+  if (!allRows.length) {
+    const detail = skipped.map((s) => `  • ${s.name}: ${s.reason}`).join('\n');
+    throw new Error(`No incident rows found across ${wb.SheetNames.length} sheet(s).\n\n${detail}`);
+  }
+
+  const incidents = parseIncidentRows(allRows);
+  return { incidents, sheets, skipped };
 }

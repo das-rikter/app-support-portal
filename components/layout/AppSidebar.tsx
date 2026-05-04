@@ -38,7 +38,7 @@ export function AppSidebar({ userPanel }: { userPanel?: React.ReactNode }) {
                 "flex items-center gap-3 rounded-lg px-2 py-1.5 text-md font-medium transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               )}
             >
               <Icon

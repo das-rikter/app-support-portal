@@ -44,6 +44,15 @@ export function getMonths(data: Incident[]): string[] {
   );
 }
 
+export function extractYear(dateStr: string): string {
+  const m = (dateStr || '').match(/\b(20\d{2})\b/);
+  return m ? m[1] : '';
+}
+
+export function getYears(data: Incident[]): string[] {
+  return [...new Set(data.map((d) => extractYear(d.date ?? '')).filter(Boolean))].sort();
+}
+
 export const CHART_COLORS = {
   o:  '#d66a06',
   o2: '#f1a24b',
@@ -65,12 +74,12 @@ export function chartBase(extraMargin: Record<string, number> = {}): object {
     margin: { l: 20, r: 20, t: 10, b: 40, ...extraMargin },
     xaxis: {
       gridcolor: 'var(--id-border)',
-      tickfont: { color: 'var(--id-muted)' },
+      tickfont: { color: 'var(--id-text)' },
       zeroline: false,
     },
     yaxis: {
       gridcolor: 'var(--id-border)',
-      tickfont: { color: 'var(--id-muted)' },
+      tickfont: { color: 'var(--id-text)' },
       zeroline: false,
     },
     showlegend: false,

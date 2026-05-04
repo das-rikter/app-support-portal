@@ -16,7 +16,7 @@ const uploadSvg = (
 const BTN_BASE = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer whitespace-nowrap border select-none transition-[background,border-color,transform] duration-150 hover:-translate-y-px active:translate-y-0 no-underline';
 const BTN_UPLOAD = 'bg-[rgba(212,97,10,0.18)] text-[#c75c00] border-[rgba(212,97,10,0.45)] hover:bg-[rgba(212,97,10,0.28)] hover:border-[#d4610a]';
 const BTN_LOADING = 'opacity-70 pointer-events-none cursor-wait';
-const BTN_SUCCESS = '!bg-[rgba(22,163,74,0.15)] !border-[rgba(22,163,74,0.5)] !text-[#15803d]';
+const BTN_SUCCESS = 'bg-[rgba(22,163,74,0.15)]! border-[rgba(22,163,74,0.5)]! text-[#15803d]!';
 
 export function DashboardToolbar() {
   const uploadState = useBugReportStore((s) => s.uploadState);
