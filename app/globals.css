@@ -173,51 +173,51 @@
     --radius: 0.5rem;
 
     /* Incident dashboard chart color tokens (read by PlotlyChart.tsx via getComputedStyle) */
-    --id-text:         #1a1d23;
-    --id-muted:        #6b7280;
-    --id-border:       rgba(20,24,32,.09);
-    --id-surface:      #ffffff;
-    --id-surface2:     #f7f8fa;
-    --id-accent:       #d66a06;
-    --id-accent2:      #f1a24b;
-    --id-accent-bg:    rgba(214,106,6,.10);
-    --id-blue:         #3b82f6;
-    --id-blue-soft:    rgba(59,130,246,.12);
-    --id-green:        #16a34a;
-    --id-green-soft:   rgba(22,163,74,.12);
-    --id-warn:         #d97706;
-    --id-warn-soft:    rgba(217,119,6,.12);
-    --id-danger:       #dc2626;
-    --id-danger-soft:  rgba(220,38,38,.12);
+    --id-text: #1a1d23;
+    --id-muted: #6b7280;
+    --id-border: rgba(20, 24, 32, .09);
+    --id-surface: #ffffff;
+    --id-surface2: #f7f8fa;
+    --id-accent: #d66a06;
+    --id-accent2: #f1a24b;
+    --id-accent-bg: rgba(214, 106, 6, .10);
+    --id-blue: #3b82f6;
+    --id-blue-soft: rgba(59, 130, 246, .12);
+    --id-green: #16a34a;
+    --id-green-soft: rgba(22, 163, 74, .12);
+    --id-warn: #d97706;
+    --id-warn-soft: rgba(217, 119, 6, .12);
+    --id-danger: #dc2626;
+    --id-danger-soft: rgba(220, 38, 38, .12);
   }
 
   /* Dark mode overrides */
   .dark {
-    --background: 222 47% 11%;
+    --background: 0 0% 9%;
     --foreground: 0 0% 98%;
-    --card: 222 47% 15%;
+    --card: 0 0% 12%;
     --card-foreground: 0 0% 98%;
-    --popover: 222 47% 15%;
+    --popover: 0 0% 12%;
     --popover-foreground: 0 0% 98%;
     --primary: 22 100% 53%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 222 47% 20%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 18%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 222 47% 25%;
-    --muted-foreground: 210 40% 80%;
-    --accent: 222 47% 20%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 0 0% 18%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 222 47% 11%;
-    --border: 222 47% 20%;
-    --input: 222 47% 20%;
+    --destructive-foreground: 0 0% 9%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
     --ring: 22 100% 53%;
 
     /* --- Sidebar --- */
-    --color-sidebar: hsl(222, 47%, 11%);
+    --color-sidebar: hsl(0, 0%, 10%);
     --color-sidebar-foreground: hsl(0, 0%, 98%);
-    --color-sidebar-border: hsl(222, 47%, 20%);
-    --color-sidebar-accent: hsl(222, 47%, 22%);
+    --color-sidebar-border: hsl(0, 0%, 18%);
+    --color-sidebar-accent: #dd6000;
     --color-sidebar-accent-foreground: hsl(0, 0%, 98%);
 
     /* --- Text tokens --- */
@@ -229,51 +229,58 @@
     --color-txt-shuttle-gray-100: #ddddde;
 
     /* --- Secondary backgrounds --- */
-    --color-secondary-background-900: #1c1c1e;
-    --color-secondary-background-250: #1f2128;
-    --color-secondary-background-200: #1a1c20;
-    --color-secondary-background-150: #2a2c30;
-    --color-secondary-background-100: #1a1c20;
-    --color-secondary-background-50:  #16181c;
+    --color-secondary-background-900: #1c1c1c;
+    --color-secondary-background-250: #202020;
+    --color-secondary-background-200: #1a1a1a;
+    --color-secondary-background-150: #2a2a2a;
+    --color-secondary-background-100: #1a1a1a;
+    --color-secondary-background-50: #161616;
 
     /* --- Status badge backgrounds --- */
-    --color-status-verified-bg:    #052e16;
-    --color-status-pending-bg:     #1c1400;
+    --color-status-verified-bg: #052e16;
+    --color-status-pending-bg: #1c1400;
     --color-status-in-progress-bg: #001e30;
-    --color-status-failed-bg:      #1f0000;
-    --color-status-rejected-bg:    #1f0000;
-    --color-status-suspended-bg:   #1f0d00;
-    --color-status-expired-bg:     #1a1c20;
-    --color-status-unknown-bg:     #1a1c20;
-    --color-status-error-bg:       #1f0000;
-    --color-status-warning-bg:     #1c1400;
-    --color-status-success-bg:     #052e16;
+    --color-status-failed-bg: #1f0000;
+    --color-status-rejected-bg: #1f0000;
+    --color-status-suspended-bg: #1f0d00;
+    --color-status-expired-bg: #1a1c20;
+    --color-status-unknown-bg: #1a1c20;
+    --color-status-error-bg: #1f0000;
+    --color-status-warning-bg: #1c1400;
+    --color-status-success-bg: #052e16;
 
     /* --- Alert borders --- */
-    --color-bdr-alert-error:   #7f1d1d;
+    --color-bdr-alert-error: #7f1d1d;
     --color-bdr-alert-warning: #78350f;
     --color-bdr-alert-success: #14532d;
-    --color-bdr-alert-brand:   #7c2d12;
-    --color-bdr-alert-gray:    #374151;
+    --color-bdr-alert-brand: #7c2d12;
+    --color-bdr-alert-gray: #374151;
 
     /* Incident dashboard chart color tokens (dark overrides) */
-    --id-text:         #f8fafc;
-    --id-muted:        #94a3b8;
-    --id-border:       rgba(148,163,184,.18);
-    --id-surface:      #111827;
-    --id-surface2:     #1f2937;
-    --id-accent-bg:    rgba(214,106,6,.18);
-    --id-blue-soft:    rgba(59,130,246,.18);
-    --id-green-soft:   rgba(22,163,74,.18);
-    --id-warn-soft:    rgba(217,119,6,.18);
-    --id-danger-soft:  rgba(220,38,38,.18);
+    --id-text: #f5f5f5;
+    --id-muted: #9ca3af;
+    --id-border: rgba(180, 180, 180, .18);
+    --id-surface: #1e1e1e;
+    --id-surface2: #2a2a2a;
+    --id-accent-bg: rgba(214, 106, 6, .18);
+    --id-blue-soft: rgba(59, 130, 246, .18);
+    --id-green-soft: rgba(22, 163, 74, .18);
+    --id-warn-soft: rgba(217, 119, 6, .18);
+    --id-danger-soft: rgba(220, 38, 38, .18);
   }
 }
 
 /* 5. Toast animation */
 @keyframes toastIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 6. Base resets — all rules expressed as Tailwind utilities via @apply */
