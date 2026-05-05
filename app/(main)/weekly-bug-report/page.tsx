@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { NavTabs } from '@/components/bug-report/NavTabs';
 import { AgeCharts } from '@/components/bug-report/charts/AgeCharts';
 import { BugsByProjectChart } from '@/components/bug-report/charts/BugsByProjectChart';
@@ -16,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useJiraHistoricalIssues, useJiraWeeklyIssues } from '@/hooks/useJiraIssues';
 import { useBugReportStore } from '@/store/useBugReportStore';
+import { useEffect } from 'react';
 
 const JIRA_WEEKLY_STATUSES = [
   'Backlog',
@@ -59,9 +59,18 @@ const JIRA_HISTORICAL_STATUSES = [
   'In Progress',
 ];
 
-function lastWeekRange(): { start: string; end: string } {
+const getDayFromLastWeek = () => {
+  // Today
   const date = new Date();
+
+  // Go back 7 days to ensure we capture the full last week, even if today is not Sunday
+  // NOTE: Change this to change the date to determine what week to load
   date.setDate(date.getDate() - 7);
+
+  return date;
+}
+
+const getWeekRange = (date: Date): { start: string; end: string } => {
   const day = date.getDay();
   const sunday = new Date(date);
   sunday.setDate(date.getDate() - day);
@@ -71,7 +80,7 @@ function lastWeekRange(): { start: string; end: string } {
   return { start: fmt(sunday), end: fmt(saturday) };
 }
 
-const { start, end } = lastWeekRange();
+const { start, end } = getWeekRange(getDayFromLastWeek());
 
 export default function WeeklyBugReportPage() {
   const setBugs = useBugReportStore((s) => s.setBugs);
