@@ -304,6 +304,87 @@
 
 /* 7. Print styles — weekly bug report PDF export */
 @media print {
+  /* ---- Force light mode — reset every variable the .dark class overrides ---- */
+  :root,
+  .dark {
+    color-scheme: light;
+
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 22 100% 43%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 22 100% 43%;
+
+    --color-sidebar: #ffffff;
+    --color-sidebar-foreground: #000000;
+    --color-sidebar-border: #eaecf0;
+    --color-sidebar-accent: #dd6000;
+    --color-sidebar-accent-foreground: #ffffff;
+
+    --color-txt-neutral-900: #4d4d4d;
+    --color-txt-neutral-600: #666666;
+    --color-txt-neutral-100: #f2f2f2;
+    --color-txt-shuttle-gray-900: #54565b;
+    --color-txt-shuttle-gray-600: #87898c;
+    --color-txt-shuttle-gray-100: #ddddde;
+
+    --color-secondary-background-900: #f0f0f0;
+    --color-secondary-background-250: #f9fafb;
+    --color-secondary-background-200: #fafafa;
+    --color-secondary-background-150: #eaecf0;
+    --color-secondary-background-100: #fafafa;
+    --color-secondary-background-50:  #fdfdfd;
+
+    --color-status-verified-bg:    #f4ffec;
+    --color-status-pending-bg:     #fdf0d3;
+    --color-status-in-progress-bg: #d9f0fb;
+    --color-status-failed-bg:      #fef2f2;
+    --color-status-rejected-bg:    #fef2f2;
+    --color-status-suspended-bg:   #fde8d3;
+    --color-status-expired-bg:     #f9fafb;
+    --color-status-unknown-bg:     #f9fafb;
+    --color-status-error-bg:       #fef2f2;
+    --color-status-warning-bg:     #fdf0d3;
+    --color-status-success-bg:     #f4ffec;
+
+    --color-bdr-alert-error:   #fca5a5;
+    --color-bdr-alert-warning: #fde68a;
+    --color-bdr-alert-success: #bbf7d0;
+    --color-bdr-alert-brand:   #eba066;
+    --color-bdr-alert-gray:    #e5e7eb;
+
+    --id-text:       #1a1d23;
+    --id-muted:      #6b7280;
+    --id-border:     rgba(20, 24, 32, .09);
+    --id-surface:    #ffffff;
+    --id-surface2:   #f7f8fa;
+    --id-accent:     #d66a06;
+    --id-accent2:    #f1a24b;
+    --id-accent-bg:  rgba(214, 106, 6, .10);
+    --id-blue:       #3b82f6;
+    --id-blue-soft:  rgba(59, 130, 246, .12);
+    --id-green:      #16a34a;
+    --id-green-soft: rgba(22, 163, 74, .12);
+    --id-warn:       #d97706;
+    --id-warn-soft:  rgba(217, 119, 6, .12);
+    --id-danger:     #dc2626;
+    --id-danger-soft: rgba(220, 38, 38, .12);
+  }
+
   /* ---- Preserve badge/chip colours on paper ---- */
   * {
     print-color-adjust: exact;

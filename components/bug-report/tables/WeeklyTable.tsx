@@ -112,19 +112,9 @@ export function WeeklyTable() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-px text-primary-clementine-900">
               <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
             </svg>
-            Bugs whose <strong className="text-foreground font-semibold mx-0.5">Updated</strong> date falls in the prior Sun-Sat week. Reflects any Jira field change, including status transitions. For full status history, export Jira changelog data.
+            Bugs whose <strong className="text-foreground font-semibold">Updated</strong> date falls in the prior Sun-Sat week. Reflects any Jira field change, including status transitions. For full status history, export Jira changelog data.
           </div>
         </div>
-
-        {/* Demo banner */}
-        {isDemo && (
-          <div className="flex items-start gap-2 text-xs text-[#92400e] bg-[#fffbeb] border border-bdr-alert-warning border-l-[3px] border-l-[#d97706] rounded-md px-3 py-2 leading-normal dark:text-bdr-alert-warning dark:bg-[#1c1400] dark:border-[#78350f] dark:border-l-[#d97706]">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-px">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Demo mode - showing most recent week from your Jira export. Upload the current week&apos;s JQL export on Monday for live data.
-          </div>
-        )}
 
         {!isEmpty && (
           <div className="overflow-x-auto rounded-lg border border-border">

@@ -15,7 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useJiraHistoricalIssues, useJiraWeeklyIssues } from '@/hooks/useJiraIssues';
 import { useBugReportStore } from '@/store/useBugReportStore';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect } from 'react';
 
 const JIRA_WEEKLY_STATUSES = [
   'Backlog',
@@ -59,55 +59,28 @@ const JIRA_HISTORICAL_STATUSES = [
   'In Progress',
 ];
 
-interface WeekOption {
-  start: string;
-  end: string;
-  label: string;
+const getDayFromLastWeek = () => {
+  // Today
+  const date = new Date();
+
+  // Go back 7 days to ensure we capture the full last week, even if today is not Sunday
+  // NOTE: Change this to change the date to determine what week to load
+  date.setDate(date.getDate() - 7);
+
+  return date;
 }
 
-const fmtIso = (d: Date) => d.toISOString().split('T')[0];
+const getWeekRange = (date: Date): { start: string; end: string } => {
+  const day = date.getDay();
+  const sunday = new Date(date);
+  sunday.setDate(date.getDate() - day);
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  const fmt = (d: Date) => d.toISOString().split('T')[0];
+  return { start: fmt(sunday), end: fmt(saturday) };
+}
 
-const fmtLabel = (d: Date) =>
-  d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-const generateWeeksOfYear = (): WeekOption[] => {
-  const today = new Date();
-  today.setHours(23, 59, 59, 999);
-
-  const year = today.getFullYear();
-  const jan1 = new Date(year, 0, 1);
-
-  // Walk back to the Sunday on or before Jan 1
-  const firstSunday = new Date(jan1);
-  firstSunday.setDate(jan1.getDate() - jan1.getDay());
-  firstSunday.setHours(0, 0, 0, 0);
-
-  const weeks: WeekOption[] = [];
-  let sunday = new Date(firstSunday);
-
-  while (sunday <= today) {
-    const saturday = new Date(sunday);
-    saturday.setDate(sunday.getDate() + 6);
-
-    weeks.push({
-      start: fmtIso(sunday),
-      end: fmtIso(saturday),
-      label: `${fmtLabel(sunday)} – ${fmtLabel(saturday)}, ${sunday.getFullYear()}`,
-    });
-
-    const next = new Date(sunday);
-    next.setDate(sunday.getDate() + 7);
-    sunday = next;
-  }
-
-  return weeks;
-};
-
-// All weeks are computed once at module level so they don't shift on re-render.
-const WEEKS = generateWeeksOfYear();
-
-// Default to previous week; fall back to current week when there is only one.
-const DEFAULT_INDEX = WEEKS.length <= 1 ? 0 : WEEKS.length - 2;
+const { start, end } = getWeekRange(getDayFromLastWeek());
 
 const printPage = (customName: string) => {
   const originalTitle = document.title;
@@ -149,10 +122,6 @@ const WeeklyBugReportPage = () => {
   const setBugs = useBugReportStore((s) => s.setBugs);
   const setWeeklyBugs = useBugReportStore((s) => s.setWeeklyBugs);
 
-  const [selectedIndex, setSelectedIndex] = useState(DEFAULT_INDEX);
-  const selectedWeek = useMemo(() => WEEKS[selectedIndex], [selectedIndex]);
-  const { start, end } = selectedWeek;
-
   const { data: weeklyIssues, isLoading: weeklyLoading } = useJiraWeeklyIssues({
     updatedAfter: start,
     updatedBefore: end,
@@ -189,17 +158,6 @@ const WeeklyBugReportPage = () => {
           description="Monitor and manage weekly bug reports."
         />
         <div className="no-print mt-1 flex items-center gap-2 shrink-0">
-          <select
-            value={selectedIndex}
-            onChange={(e) => setSelectedIndex(Number(e.target.value))}
-            className="border border-border rounded-lg px-3 py-2 text-xs font-medium bg-secondary text-foreground focus:outline-none cursor-pointer"
-          >
-            {WEEKS.map((w, i) => (
-              <option key={w.start} value={i}>
-                {w.label}
-              </option>
-            ))}
-          </select>
           <button
             onClick={() => printPage(`Weekly Bug Report - Week of ${start} to ${end}`)}
             className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/70 transition-colors"
