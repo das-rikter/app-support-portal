@@ -261,38 +261,39 @@ export interface XLSXParseResult {
 }
 
 export async function parseIncidentsXLSX(buffer: ArrayBuffer): Promise<XLSXParseResult> {
-  let xlsxModule;
+  let ExcelJSModule: typeof import('exceljs');
   try {
-    xlsxModule = await import('xlsx');
+    ExcelJSModule = await import('exceljs');
   } catch {
     throw new Error('Could not load Excel parser. Try saving the file as CSV and uploading that instead.');
   }
 
-  const { read, utils } = xlsxModule;
+  const wb = new ExcelJSModule.Workbook();
+  await wb.xlsx.load(buffer);
 
-  const wb = read(new Uint8Array(buffer), { type: 'array', cellDates: false, raw: false });
-
-  if (!wb.SheetNames.length) throw new Error('The workbook appears to be empty.');
+  if (!wb.worksheets.length) throw new Error('The workbook appears to be empty.');
 
   const allRows: Record<string, string>[] = [];
   const sheets: { name: string; rows: number }[] = [];
   const skipped: { name: string; reason: string }[] = [];
 
-  // Known incident column names used to identify the header row
   const INCIDENT_COLS = ['product', 'incident title', 'month', 'outage start date', 'function'];
 
-  for (const sheetName of wb.SheetNames) {
-    const sheet = wb.Sheets[sheetName];
+  for (const ws of wb.worksheets) {
+    const sheetName = ws.name;
 
-    // Read as raw arrays to locate the real header row regardless of title rows above it
-    const rawArrays = utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '', raw: false }) as string[][];
+    const rawArrays: string[][] = [];
+    ws.eachRow({ includeEmpty: true }, (row) => {
+      // row.values is 1-indexed; index 0 is always undefined
+      const vals = (row.values as unknown[]).slice(1);
+      rawArrays.push(vals.map((v) => (v != null ? String(v) : '')));
+    });
 
     if (!rawArrays.length) {
       skipped.push({ name: sheetName, reason: 'empty sheet' });
       continue;
     }
 
-    // Score each row by how many known incident column names it contains
     let bestIdx = -1;
     let bestScore = 0;
     for (let i = 0; i < Math.min(rawArrays.length, 15); i++) {
@@ -329,7 +330,7 @@ export async function parseIncidentsXLSX(buffer: ArrayBuffer): Promise<XLSXParse
 
   if (!allRows.length) {
     const detail = skipped.map((s) => `  • ${s.name}: ${s.reason}`).join('\n');
-    throw new Error(`No incident rows found across ${wb.SheetNames.length} sheet(s).\n\n${detail}`);
+    throw new Error(`No incident rows found across ${wb.worksheets.length} sheet(s).\n\n${detail}`);
   }
 
   const incidents = parseIncidentRows(allRows);
