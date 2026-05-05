@@ -155,7 +155,7 @@ const WeeklyBugReportPage = () => {
       <div className="flex items-start justify-between gap-4">
         <PageHeader
           title="Weekly Bug Report"
-          description="Monitor and manage weekly bug reports."
+          description={`Week of ${new Date(start).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} - ${new Date(end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
         />
         <div className="no-print mt-1 flex items-center gap-2 shrink-0">
           <button
@@ -177,7 +177,7 @@ const WeeklyBugReportPage = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
             <div style={{ fontSize: '18pt', fontWeight: 700, color: '#111827' }}>Weekly Bug Report</div>
-            <div style={{ fontSize: '11pt', color: '#6b7280', marginTop: 4 }}>Week of {start} — {end}</div>
+            <div style={{ fontSize: '11pt', color: '#6b7280', marginTop: 4 }}>Week of {new Date(start).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} - {new Date(end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
           </div>
           <div style={{ fontSize: '9pt', color: '#9ca3af' }}>
             Digital Air Strike · Printed {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
