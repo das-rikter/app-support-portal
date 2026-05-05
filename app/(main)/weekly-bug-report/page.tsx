@@ -115,7 +115,7 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-export default function WeeklyBugReportPage() {
+const WeeklyBugReportPage = () => {
   const setBugs = useBugReportStore((s) => s.setBugs);
   const setWeeklyBugs = useBugReportStore((s) => s.setWeeklyBugs);
 
@@ -172,3 +172,5 @@ export default function WeeklyBugReportPage() {
     </div>
   );
 }
+
+export default WeeklyBugReportPage;
