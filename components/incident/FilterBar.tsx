@@ -62,7 +62,7 @@ export function FilterBar() {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+    const isExcel = file.name.endsWith('.xlsx');
     const reader = new FileReader();
 
     reader.onload = async (e) => {
@@ -198,7 +198,7 @@ export function FilterBar() {
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Upload</span>
           <input
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv,.xlsx"
             onChange={handleFileUpload}
             className="text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#d66a06] file:text-white hover:file:bg-[#b85505] cursor-pointer"
           />
