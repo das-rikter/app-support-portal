@@ -23,7 +23,12 @@
       "Bash(taskkill /F /IM node.exe)",
       "PowerShell(Stop-Process -Name \"node\" -Force -ErrorAction SilentlyContinue)",
       "Bash(cat)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(Get-ChildItem -Path \"c:\\\\git\\\\app-support-portal\\\\lib\" -File)",
+      "Bash(Select-Object Name)",
+      "Bash(not exist *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\git\\\\app-support-portal\\\\app\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)"
     ]
   }
 }
