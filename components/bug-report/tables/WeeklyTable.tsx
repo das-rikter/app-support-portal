@@ -108,11 +108,12 @@ export function WeeklyTable() {
           </div>
 
           {/* Info bar */}
-          <div className="flex items-start gap-2 text-xs text-muted-foreground rounded-md px-3 py-2 leading-normal bg-primary-clementine-50 border border-primary-clementine-100 border-l-[3px] border-l-primary-clementine-900 dark:bg-[rgba(221,96,0,0.12)] dark:border-[rgba(221,96,0,0.25)] dark:border-l-primary-clementine-900">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-px text-primary-clementine-900">
-              <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
+          <div className="flex items-start text-xs text-muted-foreground rounded-md px-3 py-2 leading-normal bg-primary-clementine-50 border border-primary-clementine-100 border-l-[3px] border-l-primary-clementine-900 dark:bg-[rgba(221,96,0,0.12)] dark:border-[rgba(221,96,0,0.25)] dark:border-l-primary-clementine-900">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-px mr-2 text-primary-clementine-900">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4M12 16h.01" />
             </svg>
-            Bugs whose <strong className="text-foreground font-semibold">Updated</strong> date falls in the prior Sun-Sat week. Reflects any Jira field change, including status transitions. For full status history, export Jira changelog data.
+            Bugs that had a <strong className="text-foreground font-semibold px-1">status update</strong> in the previous Sunday-Saturday week. This includes any Jira field updates, including status transitions. For the full status history, export the Jira changelog data
           </div>
         </div>
 

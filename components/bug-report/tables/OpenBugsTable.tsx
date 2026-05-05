@@ -143,7 +143,7 @@ export function OpenBugsTable() {
               <span className="text-xs text-muted-foreground font-medium leading-[1.3]">total<br />open</span>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 mt-3">
+          <div className="flex flex-wrap gap-2 mt-3 no-print">
             <input
               type="text"
               className={cn(inputCls, 'flex-1 basis-55 min-w-45')}

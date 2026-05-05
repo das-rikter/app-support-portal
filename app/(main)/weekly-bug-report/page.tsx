@@ -191,9 +191,7 @@ const WeeklyBugReportPage = () => {
           <div className="px-1 flex flex-col gap-8 pb-16 pt-8">
             <KpiSection />
             <BugsByProjectChart />
-            <div className="print:break-before-page">
-              <PriorityCharts />
-            </div>
+            <PriorityCharts />
             <AgeCharts />
             <TimelineChart />
             <StatusTable />
