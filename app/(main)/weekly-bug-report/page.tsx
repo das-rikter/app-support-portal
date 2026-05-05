@@ -15,79 +15,97 @@ import { StatusTable } from '@/components/bug-report/tables/StatusTable';
 import { WeeklyTable } from '@/components/bug-report/tables/WeeklyTable';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
-// import { useJiraHistoricalIssues, useJiraWeeklyIssues } from '@/hooks/useJiraIssues';
-// import { useBugReportStore } from '@/store/useBugReportStore';
-// import { useMemo } from 'react';
+import { useJiraHistoricalIssues, useJiraWeeklyIssues } from '@/hooks/useJiraIssues';
+import { useBugReportStore } from '@/store/useBugReportStore';
+import { useMemo } from 'react';
 
-// const JIRA_WEEKLY_STATUSES = [
-//   'Backlog',
-//   'Blocked',
-//   'Code Review',
-//   'Feasibility Study',
-//   'Grooming',
-//   'In Development',
-//   'In QA',
-//   'On Hold',
-//   'QA Completed',
-//   'Ready for Deployment',
-//   'Ready for Development',
-//   'Ready for QA',
-//   'Selected for Development',
-//   'Testing Execution',
-//   'Verify Test Status',
-//   'Waiting for dependencies',
-//   'In Progress',
-//   'Done',
-//   'Rolled out to Production',
-// ];
-// const JIRA_HISTORICAL_STATUSES = [
-//   'Backlog',
-//   'Blocked',
-//   'Code Review',
-//   'Feasibility Study',
-//   'Grooming',
-//   'In Development',
-//   'In QA',
-//   'On Hold',
-//   'QA Completed',
-//   'Ready for Deployment',
-//   'Ready for Development',
-//   'Ready for QA',
-//   'Selected for Development',
-//   'Testing Execution',
-//   'Verify Test Status',
-//   'Waiting for dependencies',
-//   'In Progress',
-// ];
+const JIRA_WEEKLY_STATUSES = [
+  'Backlog',
+  'Blocked',
+  'Code Review',
+  'Feasibility Study',
+  'Grooming',
+  'In Development',
+  'In QA',
+  'On Hold',
+  'QA Completed',
+  'Ready for Deployment',
+  'Ready for Development',
+  'Ready for QA',
+  'Selected for Development',
+  'Testing Execution',
+  'Verify Test Status',
+  'Waiting for dependencies',
+  'In Progress',
+  'Done',
+  'Rolled out to Production',
+];
+const JIRA_HISTORICAL_STATUSES = [
+  'Backlog',
+  'Blocked',
+  'Code Review',
+  'Feasibility Study',
+  'Grooming',
+  'In Development',
+  'In QA',
+  'On Hold',
+  'QA Completed',
+  'Ready for Deployment',
+  'Ready for Development',
+  'Ready for QA',
+  'Selected for Development',
+  'Testing Execution',
+  'Verify Test Status',
+  'Waiting for dependencies',
+  'In Progress',
+];
 
-// function currentWeekRange(): { start: string; end: string } {
-//   const today = new Date();
-//   const day = today.getDay();
-//   const monday = new Date(today);
-//   monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
-//   const sunday = new Date(monday);
-//   sunday.setDate(monday.getDate() + 6);
-//   const fmt = (d: Date) => d.toISOString().split('T')[0];
-//   return { start: fmt(monday), end: fmt(sunday) };
-// }
+function getSunday(d: Date) {
+  // getDay() returns 0 for Sunday, 1 for Monday, etc.
+  const first = d.getDate() - d.getDay();
+  const sunday = new Date(d.setDate(first));
+  return sunday;
+}
+
+function getSaturday(d: Date) {
+  // Saturday is index 6 in JS
+  const dayOfWeek = d.getDay();
+  const diff = 6 - dayOfWeek;
+
+  const saturday = new Date(d);
+  saturday.setDate(d.getDate() + diff);
+  return saturday;
+}
+
+function weekRange(): { start: string; end: string } {
+
+  const date = new Date();
+  date.setDate(date.getDate() - 7);
+
+  const sunday = getSunday(date);
+  const saturday = getSaturday(date);
+  const fmt = (d: Date) => d.toISOString().split('T')[0];
+  return { start: fmt(sunday), end: fmt(saturday) };
+}
 
 export default function WeeklyBugReportPage() {
-  // const weeklyRange = useBugReportStore((s) => s.weeklyRange);
+  const weeklyRange = useBugReportStore((s) => s.weeklyRange);
 
-  // const { start, end } = useMemo(
-  //   () => weeklyRange ?? currentWeekRange(),
-  //   [weeklyRange]
-  // );
+  const { start, end } = useMemo(
+    () => weeklyRange ?? weekRange(),
+    [weeklyRange]
+  );
 
-  // useJiraWeeklyIssues({
-  //   updatedAfter: start,
-  //   updatedBefore: end,
-  //   statuses: JIRA_WEEKLY_STATUSES,
-  // });
+  const { data: weeklyIssues } = useJiraWeeklyIssues({
+    updatedAfter: start,
+    updatedBefore: end,
+    statuses: JIRA_WEEKLY_STATUSES,
+  });
 
-  // useJiraHistoricalIssues({
-  //   statuses: JIRA_HISTORICAL_STATUSES,
-  // });
+  const { data: historicalIssues } = useJiraHistoricalIssues({
+    statuses: JIRA_HISTORICAL_STATUSES,
+  });
+
 
   return (
     <div className="space-y-6 pt-6">

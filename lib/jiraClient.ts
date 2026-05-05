@@ -1,5 +1,5 @@
-import type { JiraSearchResult } from "@/schemas";
-import { JiraSearchResultSchema } from "@/schemas";
+import type { JiraProject, JiraSearchResult } from "@/schemas";
+import { JiraProjectSchema, JiraSearchResultSchema } from "@/schemas";
 
 const JIRA_PROJECTS = [
   "NRL", "NSL", "NRP", "NB", "NLV",
@@ -9,6 +9,7 @@ const JIRA_PROJECTS = [
 const JIRA_FIELDS = [
   "summary", "status", "priority", "assignee",
   "reporter", "created", "updated", "issuetype", "project",
+  "issuelinks", "customfield_10022",
 ].join(",");
 
 interface JiraBaseParams {
@@ -24,7 +25,7 @@ export interface JiraWeeklyParams extends JiraBaseParams {
 
 export type JiraHistoricalParams = JiraBaseParams;
 
-function buildWeeklyJql(params: JiraWeeklyParams): string {
+const buildWeeklyJql = (params: JiraWeeklyParams): string => {
   const projects = JIRA_PROJECTS.join(", ");
   const statuses = params.statuses.map((s) => `"${s}"`).join(", ");
   const jql = [
@@ -38,7 +39,7 @@ function buildWeeklyJql(params: JiraWeeklyParams): string {
   return `${jql} ORDER BY created DESC`;
 }
 
-function buildHistoricalJql(params: JiraHistoricalParams): string {
+const buildHistoricalJql = (params: JiraHistoricalParams): string => {
   const projects = JIRA_PROJECTS.join(", ");
   const statuses = params.statuses.map((s: string) => `"${s}"`).join(", ");
   const jql = [
@@ -51,7 +52,7 @@ function buildHistoricalJql(params: JiraHistoricalParams): string {
   return `${jql} ORDER BY created DESC`;
 }
 
-async function searchJiraIssues(params: JiraBaseParams, jql: string): Promise<JiraSearchResult> {
+const searchJiraIssues = async (params: JiraBaseParams, jql: string): Promise<JiraSearchResult> => {
   const baseUrl = process.env.JIRA_BASE_URL;
   const email = process.env.JIRA_EMAIL;
   const apiToken = process.env.JIRA_API_TOKEN;
@@ -95,10 +96,31 @@ async function searchJiraIssues(params: JiraBaseParams, jql: string): Promise<Ji
   return JiraSearchResultSchema.parse(await response.json());
 }
 
-export async function searchWeeklyJiraIssues(params: JiraWeeklyParams): Promise<JiraSearchResult> {
-  return searchJiraIssues(params, buildWeeklyJql(params));
-}
+export const searchWeeklyJiraIssues = async (params: JiraWeeklyParams): Promise<JiraSearchResult> => searchJiraIssues(params, buildWeeklyJql(params));
 
-export async function searchHistoricalJiraIssues(params: JiraHistoricalParams): Promise<JiraSearchResult> {
-  return searchJiraIssues(params, buildHistoricalJql(params));
+export const searchHistoricalJiraIssues = async (params: JiraHistoricalParams): Promise<JiraSearchResult> => searchJiraIssues(params, buildHistoricalJql(params));
+
+export const fetchJiraProjects = async (): Promise<JiraProject[]> => {
+  const baseUrl = process.env.JIRA_BASE_URL;
+  const email = process.env.JIRA_EMAIL;
+  const apiToken = process.env.JIRA_API_TOKEN;
+
+  if (!baseUrl || !email || !apiToken) {
+    throw new Error(
+      "Missing Jira credentials: JIRA_BASE_URL, JIRA_EMAIL, and JIRA_API_TOKEN must be set."
+    );
+  }
+
+  const credentials = Buffer.from(`${email}:${apiToken}`).toString("base64");
+  const headers = { Authorization: `Basic ${credentials}`, Accept: "application/json" };
+
+  const results = await Promise.all(
+    JIRA_PROJECTS.map(async (key) => {
+      const response = await fetch(`${baseUrl}/rest/api/3/project/${key}`, { headers });
+      if (!response.ok) throw new Error(`Failed to fetch project ${key}: ${response.status}`);
+      return JiraProjectSchema.parse(await response.json());
+    })
+  );
+
+  return results;
 }

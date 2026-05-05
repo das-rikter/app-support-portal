@@ -68,6 +68,28 @@ const JiraUserSchema = z.object({
   emailAddress: z.string().optional(),
 }).nullish();
 
+const JiraLinkedIssueSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  fields: z.object({
+    summary: z.string(),
+    status: z.object({ name: z.string() }),
+    priority: z.object({ name: z.string() }).nullish(),
+    issuetype: z.object({ name: z.string() }),
+  }),
+}).optional();
+
+const JiraIssueLinkSchema = z.object({
+  id: z.string(),
+  type: z.object({
+    name: z.string(),
+    inward: z.string(),
+    outward: z.string(),
+  }),
+  inwardIssue: JiraLinkedIssueSchema,
+  outwardIssue: JiraLinkedIssueSchema,
+});
+
 export const JiraIssueSchema = z.object({
   id: z.string(),
   key: z.string(),
@@ -80,8 +102,22 @@ export const JiraIssueSchema = z.object({
     created: z.string(),
     updated: z.string(),
     issuetype: z.object({ name: z.string() }),
-    project: z.object({ key: z.string(), name: z.string() }),
-  }),
+    project: z.object({
+      key: z.string(),
+      name: z.string(),
+    }),
+    issuelinks: JiraIssueLinkSchema.array().optional(),
+    customfield_10022: z.array(z.object({
+      id: z.number(),
+      name: z.string(),
+      state: z.string(),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+    })).nullish(),
+  }).transform(({ customfield_10022, ...rest }) => ({
+    ...rest,
+    sprint: customfield_10022,
+  })),
 });
 
 export type JiraIssue = z.infer<typeof JiraIssueSchema>;
@@ -93,3 +129,16 @@ export const JiraSearchResultSchema = z.object({
 });
 
 export type JiraSearchResult = z.infer<typeof JiraSearchResultSchema>;
+
+export const JiraProjectSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  name: z.string(),
+  lead: z.object({
+    accountId: z.string(),
+    displayName: z.string(),
+    active: z.boolean(),
+  }).optional(),
+});
+
+export type JiraProject = z.infer<typeof JiraProjectSchema>;
