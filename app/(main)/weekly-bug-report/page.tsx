@@ -1,9 +1,7 @@
 'use client';
 
-import { DashboardToolbar } from '@/components/bug-report/DashboardToolbar';
+import { useEffect } from 'react';
 import { NavTabs } from '@/components/bug-report/NavTabs';
-import { PublishModal } from '@/components/bug-report/PublishModal';
-import { Toast } from '@/components/bug-report/Toast';
 import { AgeCharts } from '@/components/bug-report/charts/AgeCharts';
 import { BugsByProjectChart } from '@/components/bug-report/charts/BugsByProjectChart';
 import { PriorityCharts } from '@/components/bug-report/charts/PriorityCharts';
@@ -15,9 +13,9 @@ import { StatusTable } from '@/components/bug-report/tables/StatusTable';
 import { WeeklyTable } from '@/components/bug-report/tables/WeeklyTable';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useJiraHistoricalIssues, useJiraWeeklyIssues } from '@/hooks/useJiraIssues';
 import { useBugReportStore } from '@/store/useBugReportStore';
-import { useEffect, useMemo } from 'react';
 
 const JIRA_WEEKLY_STATUSES = [
   'Backlog',
@@ -40,6 +38,7 @@ const JIRA_WEEKLY_STATUSES = [
   'Done',
   'Rolled out to Production',
 ];
+
 const JIRA_HISTORICAL_STATUSES = [
   'Backlog',
   'Blocked',
@@ -60,64 +59,82 @@ const JIRA_HISTORICAL_STATUSES = [
   'In Progress',
 ];
 
-const getSunday = (d: Date) => {
-  // getDay() returns 0 for Sunday, 1 for Monday, etc.
-  const first = d.getDate() - d.getDay();
-  const sunday = new Date(d.setDate(first));
-  return sunday;
-}
-
-const getSaturday = (d: Date) => {
-  // Saturday is index 6 in JS
-  const dayOfWeek = d.getDay();
-  const diff = 6 - dayOfWeek;
-
-  const saturday = new Date(d);
-  saturday.setDate(d.getDate() + diff);
-  return saturday;
-}
-
-const weekRange = (): { start: string; end: string } => {
-
+function lastWeekRange(): { start: string; end: string } {
   const date = new Date();
   date.setDate(date.getDate() - 7);
-
-  const sunday = getSunday(date);
-  const saturday = getSaturday(date);
+  const day = date.getDay();
+  const sunday = new Date(date);
+  sunday.setDate(date.getDate() - day);
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
   const fmt = (d: Date) => d.toISOString().split('T')[0];
   return { start: fmt(sunday), end: fmt(saturday) };
 }
 
+const { start, end } = lastWeekRange();
+
 export default function WeeklyBugReportPage() {
-  const weeklyRange = useBugReportStore((s) => s.weeklyRange);
+  const setBugs = useBugReportStore((s) => s.setBugs);
+  const setWeeklyBugs = useBugReportStore((s) => s.setWeeklyBugs);
 
-  const { start, end } = useMemo(
-    () => weeklyRange ?? weekRange(),
-    [weeklyRange]
-  );
-
-  const { data: weeklyIssues } = useJiraWeeklyIssues({
+  const { data: weeklyIssues, isLoading: weeklyLoading } = useJiraWeeklyIssues({
     updatedAfter: start,
     updatedBefore: end,
     statuses: JIRA_WEEKLY_STATUSES,
   });
 
-  const { data: historicalIssues } = useJiraHistoricalIssues({
+  const { data: historicalIssues, isLoading: historicalLoading } = useJiraHistoricalIssues({
     statuses: JIRA_HISTORICAL_STATUSES,
   });
 
-  useEffect(() => {
-    if (!!weeklyIssues) {
-      console.log("Weekly Issues:", weeklyIssues);
-    }
-  }, [weeklyIssues]);
+  const isLoading = weeklyLoading || historicalLoading;
 
   useEffect(() => {
-    if (!!historicalIssues) {
-      console.log("Historical Issues:", historicalIssues);
+    if (weeklyIssues) {
+      setWeeklyBugs(weeklyIssues, { start, end });
     }
-  }, [historicalIssues]);
+  }, [weeklyIssues, setWeeklyBugs]);
 
+  useEffect(() => {
+    if (historicalIssues) {
+      setBugs(historicalIssues);
+    }
+  }, [historicalIssues, setBugs]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 pt-6">
+        <PageHeader
+          title="Weekly Bug Report"
+          description="Monitor and manage weekly bug reports."
+        />
+        <Card>
+          <CardContent className="p-6 space-y-6">
+            {/* KPI row */}
+            <div className="grid grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 rounded-2xl" />
+              ))}
+            </div>
+            {/* Chart row */}
+            <div className="grid grid-cols-2 gap-4">
+              <Skeleton className="h-64 rounded-2xl" />
+              <Skeleton className="h-64 rounded-2xl" />
+            </div>
+            {/* Wide chart */}
+            <Skeleton className="h-48 rounded-2xl" />
+            {/* Table */}
+            <div className="space-y-2">
+              <Skeleton className="h-10 rounded-lg" />
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 rounded-lg" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pt-6">
@@ -127,7 +144,6 @@ export default function WeeklyBugReportPage() {
       />
       <Card>
         <CardContent>
-          <DashboardToolbar />
           <NavTabs />
           <div className="px-1 flex flex-col gap-8 pb-16 pt-8">
             <KpiSection />
@@ -142,8 +158,6 @@ export default function WeeklyBugReportPage() {
           </div>
         </CardContent>
       </Card>
-      <Toast />
-      <PublishModal />
     </div>
   );
 }
