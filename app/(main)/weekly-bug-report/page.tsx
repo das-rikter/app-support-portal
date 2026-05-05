@@ -17,7 +17,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { useJiraHistoricalIssues, useJiraWeeklyIssues } from '@/hooks/useJiraIssues';
 import { useBugReportStore } from '@/store/useBugReportStore';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 const JIRA_WEEKLY_STATUSES = [
   'Backlog',
@@ -60,14 +60,14 @@ const JIRA_HISTORICAL_STATUSES = [
   'In Progress',
 ];
 
-function getSunday(d: Date) {
+const getSunday = (d: Date) => {
   // getDay() returns 0 for Sunday, 1 for Monday, etc.
   const first = d.getDate() - d.getDay();
   const sunday = new Date(d.setDate(first));
   return sunday;
 }
 
-function getSaturday(d: Date) {
+const getSaturday = (d: Date) => {
   // Saturday is index 6 in JS
   const dayOfWeek = d.getDay();
   const diff = 6 - dayOfWeek;
@@ -77,7 +77,7 @@ function getSaturday(d: Date) {
   return saturday;
 }
 
-function weekRange(): { start: string; end: string } {
+const weekRange = (): { start: string; end: string } => {
 
   const date = new Date();
   date.setDate(date.getDate() - 7);
@@ -105,6 +105,18 @@ export default function WeeklyBugReportPage() {
   const { data: historicalIssues } = useJiraHistoricalIssues({
     statuses: JIRA_HISTORICAL_STATUSES,
   });
+
+  useEffect(() => {
+    if (!!weeklyIssues) {
+      console.log("Weekly Issues:", weeklyIssues);
+    }
+  }, [weeklyIssues]);
+
+  useEffect(() => {
+    if (!!historicalIssues) {
+      console.log("Historical Issues:", historicalIssues);
+    }
+  }, [historicalIssues]);
 
 
   return (
