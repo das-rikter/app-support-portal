@@ -82,6 +82,39 @@ const getWeekRange = (date: Date): { start: string; end: string } => {
 
 const { start, end } = getWeekRange(getDayFromLastWeek());
 
+const LoadingSkeleton = () => (
+  <div className="space-y-6 pt-6">
+    <PageHeader
+      title="Weekly Bug Report"
+      description="Monitor and manage weekly bug reports."
+    />
+    <Card>
+      <CardContent className="p-6 space-y-6">
+        {/* KPI row */}
+        <div className="grid grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-2xl" />
+          ))}
+        </div>
+        {/* Chart row */}
+        <div className="grid grid-cols-2 gap-4">
+          <Skeleton className="h-64 rounded-2xl" />
+          <Skeleton className="h-64 rounded-2xl" />
+        </div>
+        {/* Wide chart */}
+        <Skeleton className="h-48 rounded-2xl" />
+        {/* Table */}
+        <div className="space-y-2">
+          <Skeleton className="h-10 rounded-lg" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 rounded-lg" />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
+
 export default function WeeklyBugReportPage() {
   const setBugs = useBugReportStore((s) => s.setBugs);
   const setWeeklyBugs = useBugReportStore((s) => s.setWeeklyBugs);
@@ -111,38 +144,7 @@ export default function WeeklyBugReportPage() {
   }, [historicalIssues, setBugs]);
 
   if (isLoading) {
-    return (
-      <div className="space-y-6 pt-6">
-        <PageHeader
-          title="Weekly Bug Report"
-          description="Monitor and manage weekly bug reports."
-        />
-        <Card>
-          <CardContent className="p-6 space-y-6">
-            {/* KPI row */}
-            <div className="grid grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 rounded-2xl" />
-              ))}
-            </div>
-            {/* Chart row */}
-            <div className="grid grid-cols-2 gap-4">
-              <Skeleton className="h-64 rounded-2xl" />
-              <Skeleton className="h-64 rounded-2xl" />
-            </div>
-            {/* Wide chart */}
-            <Skeleton className="h-48 rounded-2xl" />
-            {/* Table */}
-            <div className="space-y-2">
-              <Skeleton className="h-10 rounded-lg" />
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 rounded-lg" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   return (
