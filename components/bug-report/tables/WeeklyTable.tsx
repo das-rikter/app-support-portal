@@ -1,11 +1,11 @@
 'use client';
 
-import { cn } from '@/lib/utils';
-import { useMemo } from 'react';
-import { useBugReportStore } from '@/store/useBugReportStore';
-import type { Bug } from '@/types/bug-report';
 import { getPrioClass, getProjBadgeClass, getStatClass } from '@/lib/bugUtils';
 import { fmtDate, fmtDateStr, fmtShort, getPriorWeekWindow, parseBugDate } from '@/lib/dateUtils';
+import { cn } from '@/lib/utils';
+import { useBugReportStore } from '@/store/useBugReportStore';
+import type { Bug } from '@/types/bug-report';
+import { useMemo } from 'react';
 
 const SECTION_LABEL = "flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-primary-clementine-900 pb-1 border-b-2 border-border before:content-[''] before:block before:w-0.75 before:h-3.5 before:bg-primary-clementine-900 before:rounded-sm before:shrink-0";
 const TH = 'px-4 py-3 text-left font-bold text-muted-foreground uppercase tracking-[0.05em] text-[0.68rem] border-b border-border whitespace-nowrap bg-muted';
@@ -28,8 +28,8 @@ function bugMatchesWeek(b: Bug, start: Date, end: Date): boolean {
 }
 
 export function WeeklyTable() {
-  const bugs        = useBugReportStore((s) => s.bugs);
-  const weeklyBugs  = useBugReportStore((s) => s.weeklyBugs);
+  const bugs = useBugReportStore((s) => s.bugs);
+  const weeklyBugs = useBugReportStore((s) => s.weeklyBugs);
   const weeklyRange = useBugReportStore((s) => s.weeklyRange);
 
   const { matches, start, end, isDemo } = useMemo(() => {
@@ -37,7 +37,7 @@ export function WeeklyTable() {
       let start: Date, end: Date;
       if (weeklyRange) {
         start = new Date(weeklyRange.start); start.setHours(0, 0, 0, 0);
-        end   = new Date(weeklyRange.end);   end.setHours(23, 59, 59, 999);
+        end = new Date(weeklyRange.end); end.setHours(23, 59, 59, 999);
       } else {
         const w = getPriorWeekWindow(); start = w.start; end = w.end;
       }
@@ -82,7 +82,7 @@ export function WeeklyTable() {
   }, [bugs, weeklyBugs, weeklyRange]);
 
   const hasExtra = matches.some((b) => b.sprints || b.linked);
-  const isEmpty  = matches.length === 0;
+  const isEmpty = matches.length === 0;
 
   const titleLabel = `Bugs Updated ${fmtShort(start)} - ${fmtShort(end)}`;
   const subtitle = isDemo
@@ -90,7 +90,7 @@ export function WeeklyTable() {
     : `${matches.length} bug${matches.length !== 1 ? 's' : ''} with activity during ${fmtDate(start)} - ${fmtDate(end)}`;
 
   return (
-    <section id="section-weekly" className="scroll-mt-14 flex flex-col gap-4">
+    <section id="section-weekly" className="scroll-mt-14 flex flex-col gap-4 print:break-before-page">
       <div className={SECTION_LABEL}>Weekly Updates</div>
       <div className="bg-card rounded-xl border border-border shadow-xs p-6 flex flex-col gap-4">
         <div className="flex flex-col gap-1">

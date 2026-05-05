@@ -1,9 +1,9 @@
 'use client';
 
-import { useRef, useEffect, useMemo } from 'react';
-import { Chart } from 'chart.js/auto';
+import { PRIORITY_COLORS, PRIORITY_ORDER, axisDefaults, tickDefaults } from '@/lib/chartUtils';
 import { useBugReportStore } from '@/store/useBugReportStore';
-import { PRIORITY_ORDER, PRIORITY_COLORS, axisDefaults, tickDefaults } from '@/lib/chartUtils';
+import { Chart } from 'chart.js/auto';
+import { useEffect, useMemo, useRef } from 'react';
 
 const SECTION_LABEL = "flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-primary-clementine-900 pb-1 border-b-2 border-border before:content-[''] before:block before:w-0.75 before:h-3.5 before:bg-primary-clementine-900 before:rounded-sm before:shrink-0";
 
@@ -12,9 +12,9 @@ const PRIO_COLORS = ['#d4610a', '#0891b2', '#94a3b8', '#dc2626', '#f97316'];
 
 export function PriorityCharts() {
   const bugs = useBugReportStore((s) => s.bugs);
-  const donutRef   = useRef<HTMLCanvasElement>(null);
+  const donutRef = useRef<HTMLCanvasElement>(null);
   const stackedRef = useRef<HTMLCanvasElement>(null);
-  const donutChart   = useRef<Chart | null>(null);
+  const donutChart = useRef<Chart | null>(null);
   const stackedChart = useRef<Chart | null>(null);
 
   const { prioLabels, prioCounts, projShort, projPrio } = useMemo(() => {
@@ -110,7 +110,7 @@ export function PriorityCharts() {
   }, [projShort, projPrio]);
 
   return (
-    <section id="section-priority" className="scroll-mt-14 flex flex-col gap-4">
+    <section id="section-priority" className="scroll-mt-14 flex flex-col gap-4 print:break-before-page">
       <div className={SECTION_LABEL}>Priority</div>
       <div className="grid grid-cols-2 gap-5 max-[900px]:grid-cols-1">
         <div className="bg-card rounded-xl border border-border shadow-xs p-6 flex flex-col gap-4">
