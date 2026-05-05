@@ -51,7 +51,7 @@ export function IncidentsView() {
       return 0;
     });
     return r;
-  }, [singleApp, search, sortCol, sortDir]);
+  }, [filtered, search, sortCol, sortDir]);
 
   return (
     <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
