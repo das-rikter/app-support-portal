@@ -9,7 +9,7 @@ const JIRA_PROJECTS = [
 const JIRA_FIELDS = [
   "summary", "status", "priority", "assignee",
   "reporter", "created", "updated", "issuetype", "project",
-  "issuelinks", "customfield_10022",
+  "issuelinks", "customfield_10022" // <-- This is the custom sprint field; do not remove or change
 ].join(",");
 
 interface JiraBaseParams {

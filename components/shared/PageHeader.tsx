@@ -5,7 +5,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description }: PageHeaderProps) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5 no-print">
       <h1 className="text-2xl font-bold tracking-tight text-foreground">
         {title}
       </h1>

@@ -1,10 +1,10 @@
 'use client';
 
+import { axisDefaults, getProductPalette, tickDefaults } from '@/lib/chartUtils';
+import { useBugReportStore } from '@/store/useBugReportStore';
+import type { Bug } from '@/types/bug-report';
 import { Chart } from 'chart.js/auto';
 import { useEffect, useMemo, useRef } from 'react';
-import { useBugReportStore } from '@/store/useBugReportStore';
-import { axisDefaults, getProductPalette, tickDefaults } from '@/lib/chartUtils';
-import type { Bug } from '@/types/bug-report';
 
 const SECTION_LABEL = "flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-primary-clementine-900 pb-1 border-b-2 border-border before:content-[''] before:block before:w-0.75 before:h-3.5 before:bg-primary-clementine-900 before:rounded-sm before:shrink-0";
 
@@ -16,9 +16,9 @@ function bugAge(b: Bug): number {
 export function AgeCharts() {
   const bugs = useBugReportStore((s) => s.bugs);
   const distRef = useRef<HTMLCanvasElement>(null);
-  const avgRef  = useRef<HTMLCanvasElement>(null);
+  const avgRef = useRef<HTMLCanvasElement>(null);
   const distChart = useRef<Chart | null>(null);
-  const avgChart  = useRef<Chart | null>(null);
+  const avgChart = useRef<Chart | null>(null);
 
   const { ageBuckets, avgAgeData } = useMemo(() => {
     const projMap: Record<string, number> = {};
@@ -30,11 +30,11 @@ export function AgeCharts() {
     const bkts = [0, 0, 0, 0, 0];
     bugs.forEach((b) => {
       const a = bugAge(b);
-      if (a <= 90)       bkts[0]++;
+      if (a <= 90) bkts[0]++;
       else if (a <= 180) bkts[1]++;
       else if (a <= 365) bkts[2]++;
       else if (a <= 730) bkts[3]++;
-      else               bkts[4]++;
+      else bkts[4]++;
     });
 
     const avgLabels = sorted.map(([p]) => p.replace(/^New /, ''));
@@ -124,7 +124,7 @@ export function AgeCharts() {
   }, [avgAgeData]);
 
   return (
-    <section id="section-age" className="scroll-mt-14 flex flex-col gap-4">
+    <section id="section-age" className="scroll-mt-14 flex flex-col gap-4 print:break-before-page">
       <div className={SECTION_LABEL}>Age Analysis</div>
       <div className="grid grid-cols-2 gap-5 max-[900px]:grid-cols-1">
         <div className="bg-card rounded-xl border border-border shadow-xs p-6 flex flex-col gap-4">

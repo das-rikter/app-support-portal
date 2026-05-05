@@ -1,9 +1,9 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { useMemo, useState } from 'react';
 import { useBugReportStore } from '@/store/useBugReportStore';
 import type { Bug } from '@/types/bug-report';
+import { useMemo, useState } from 'react';
 
 const SECTION_LABEL = "flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-primary-clementine-900 pb-1 border-b-2 border-border before:content-[''] before:block before:w-0.75 before:h-3.5 before:bg-primary-clementine-900 before:rounded-sm before:shrink-0";
 const TH = 'px-4 py-3 font-bold text-muted-foreground uppercase tracking-[0.05em] text-[0.68rem] border-b border-border whitespace-nowrap bg-muted text-center';
@@ -25,15 +25,15 @@ const WBR_ORDER = [
 
 const BADGE_MAP: Record<string, string> = {
   'Engage To Sell': 'bg-[#2c972c] text-white',
-  'Response Path':  'bg-[#7c589e] text-white',
-  BestRide:         'bg-[#1b6392] text-white',
-  CDXP:             'bg-[#8ea3c0] text-white',
-  "Central API's":  'bg-[#755f5f] text-white',
-  'Credit Logix':   'bg-[#884408] text-white',
-  'Lot Vantage':    'bg-[#6da164] text-white',
-  'Media Logix':    'bg-[#971d1d] text-white',
+  'Response Path': 'bg-[#7c589e] text-white',
+  BestRide: 'bg-[#1b6392] text-white',
+  CDXP: 'bg-[#8ea3c0] text-white',
+  "Central API's": 'bg-[#755f5f] text-white',
+  'Credit Logix': 'bg-[#884408] text-white',
+  'Lot Vantage': 'bg-[#6da164] text-white',
+  'Media Logix': 'bg-[#971d1d] text-white',
   'Response Logix': 'bg-[#8a5252] text-white',
-  'Social Logix':   'bg-[#7e7188] text-white',
+  'Social Logix': 'bg-[#7e7188] text-white',
 };
 
 const ABBR_MAP: Record<string, string> = {
@@ -92,7 +92,7 @@ export function StatusTable() {
   }, [grid]);
 
   return (
-    <section id="section-status-table" className="scroll-mt-14 flex flex-col gap-4">
+    <section id="section-status-table" className="scroll-mt-14 flex flex-col gap-4 print:break-before-page">
       <div className={SECTION_LABEL}>Status Table</div>
       <div className="bg-card rounded-xl border border-border shadow-xs p-6 flex flex-col gap-4">
         <div className="flex flex-col gap-1">
@@ -139,10 +139,10 @@ export function StatusTable() {
                   </td>
                   <td className={cn(TD, 'text-center text-muted-foreground tabular-nums')}>{grid[p]?.total ?? 0}</td>
                   <Cell n={grid[p]?.Highest ?? 0} critical />
-                  <Cell n={grid[p]?.High    ?? 0} high />
-                  <Cell n={grid[p]?.Medium  ?? 0} />
-                  <Cell n={grid[p]?.Low     ?? 0} />
-                  <Cell n={grid[p]?.Lowest  ?? 0} />
+                  <Cell n={grid[p]?.High ?? 0} high />
+                  <Cell n={grid[p]?.Medium ?? 0} />
+                  <Cell n={grid[p]?.Low ?? 0} />
+                  <Cell n={grid[p]?.Lowest ?? 0} />
                 </tr>
               ))}
               {/* Remaining products */}
@@ -153,10 +153,10 @@ export function StatusTable() {
                   </td>
                   <td className={cn(TD, 'text-center font-bold text-foreground tabular-nums')}>{grid[p]?.total ?? 0}</td>
                   <Cell n={grid[p]?.Highest ?? 0} critical />
-                  <Cell n={grid[p]?.High    ?? 0} high />
-                  <Cell n={grid[p]?.Medium  ?? 0} />
-                  <Cell n={grid[p]?.Low     ?? 0} />
-                  <Cell n={grid[p]?.Lowest  ?? 0} />
+                  <Cell n={grid[p]?.High ?? 0} high />
+                  <Cell n={grid[p]?.Medium ?? 0} />
+                  <Cell n={grid[p]?.Low ?? 0} />
+                  <Cell n={grid[p]?.Lowest ?? 0} />
                 </tr>
               ))}
               {/* Totals row */}

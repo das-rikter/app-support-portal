@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
 import { useBugReportStore } from '@/store/useBugReportStore';
+import { useMemo } from 'react';
 
 const SECTION_LABEL = "flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-primary-clementine-900 pb-1 border-b-2 border-border before:content-[''] before:block before:w-0.75 before:h-3.5 before:bg-primary-clementine-900 before:rounded-sm before:shrink-0";
 
@@ -36,7 +36,7 @@ export function LeadSection() {
   }, [bugs]);
 
   return (
-    <section id="section-leads" className="scroll-mt-14 flex flex-col gap-4">
+    <section id="section-leads" className="scroll-mt-14 flex flex-col gap-4 print:break-before-page">
       <div className={SECTION_LABEL}>By Lead</div>
       <div className="bg-card rounded-xl border border-border shadow-xs p-6 flex flex-col gap-4">
         <div className="flex flex-col gap-1">

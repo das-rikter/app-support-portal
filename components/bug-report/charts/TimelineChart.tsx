@@ -1,8 +1,8 @@
 'use client';
 
+import { useBugReportStore } from '@/store/useBugReportStore';
 import { Chart } from 'chart.js/auto';
 import { useEffect, useMemo, useRef } from 'react';
-import { useBugReportStore } from '@/store/useBugReportStore';
 
 const SECTION_LABEL = "flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-primary-clementine-900 pb-1 border-b-2 border-border before:content-[''] before:block before:w-0.75 before:h-3.5 before:bg-primary-clementine-900 before:rounded-sm before:shrink-0";
 
@@ -11,7 +11,7 @@ const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 export function TimelineChart() {
   const bugs = useBugReportStore((s) => s.bugs);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const chartRef  = useRef<Chart | null>(null);
+  const chartRef = useRef<Chart | null>(null);
 
   const { labels, counts } = useMemo(() => {
     const monthly: Record<string, number> = {};
@@ -76,7 +76,7 @@ export function TimelineChart() {
   }, [labels, counts]);
 
   return (
-    <section id="section-timeline" className="scroll-mt-14 flex flex-col gap-4">
+    <section id="section-timeline" className="scroll-mt-14 flex flex-col gap-4 print:break-before-page">
       <div className={SECTION_LABEL}>Timeline</div>
       <div className="bg-card rounded-xl border border-border shadow-xs p-6 flex flex-col gap-4">
         <div className="flex flex-col gap-1">

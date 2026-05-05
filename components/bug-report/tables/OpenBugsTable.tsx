@@ -1,9 +1,9 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { useMemo, useState } from 'react';
 import { useBugReportStore } from '@/store/useBugReportStore';
 import type { Bug } from '@/types/bug-report';
+import { useMemo, useState } from 'react';
 
 const SECTION_LABEL = "flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-primary-clementine-900 pb-1 border-b-2 border-border before:content-[''] before:block before:w-0.75 before:h-3.5 before:bg-primary-clementine-900 before:rounded-sm before:shrink-0";
 const TH = 'px-4 py-3 text-left font-bold text-muted-foreground uppercase tracking-[0.05em] text-[0.68rem] border-b border-border whitespace-nowrap bg-muted';
@@ -13,10 +13,10 @@ const PAGE_SIZE = 25;
 const PRIORITY_ORDER: Record<string, number> = { Highest: 0, High: 1, Medium: 2, Low: 3, Lowest: 4 };
 const PRIORITY_BADGE: Record<string, string> = {
   Highest: 'bg-[#fee2e2] text-[#991b1b] dark:bg-[#450a0a] dark:text-[#fca5a5]',
-  High:    'bg-[#ffedd5] text-[#9a3412] dark:bg-[#431407] dark:text-[#fdba74]',
-  Medium:  'bg-[#fef9c3] text-[#854d0e] dark:bg-[#1c1100] dark:text-[#fde68a]',
-  Low:     'bg-[#dbeafe] text-[#1e40af] dark:bg-[#1e3a5f] dark:text-[#93c5fd]',
-  Lowest:  'bg-[#f0fdf4] text-[#166534] dark:bg-[#052e16] dark:text-[#86efac]',
+  High: 'bg-[#ffedd5] text-[#9a3412] dark:bg-[#431407] dark:text-[#fdba74]',
+  Medium: 'bg-[#fef9c3] text-[#854d0e] dark:bg-[#1c1100] dark:text-[#fde68a]',
+  Low: 'bg-[#dbeafe] text-[#1e40af] dark:bg-[#1e3a5f] dark:text-[#93c5fd]',
+  Lowest: 'bg-[#f0fdf4] text-[#166534] dark:bg-[#052e16] dark:text-[#86efac]',
 };
 
 function getAge(bug: Bug): number {
@@ -27,6 +27,39 @@ function getAge(bug: Bug): number {
 type SortDir = 1 | -1;
 type SortCol = keyof Bug | 'age';
 
+function BugRow({ b }: { b: Bug }) {
+  const age = getAge(b);
+  const ageCls = age > 365 ? 'text-[#dc2626]! font-bold' : age > 180 ? 'text-[#d97706]! font-semibold' : '';
+  const badgeCls = PRIORITY_BADGE[b.priority] || PRIORITY_BADGE.Medium;
+  const created = b.created
+    ? new Date(b.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : '-';
+  return (
+    <tr className="hover:bg-secondary/50">
+      <td className={TD}>
+        <span className="font-mono font-semibold text-primary-clementine-900 whitespace-nowrap">{b.key}</span>
+      </td>
+      <td className={cn(TD, 'max-w-70 overflow-hidden text-ellipsis text-muted-foreground italic')} title={b.summary || ''}>
+        {b.summary || '-'}
+      </td>
+      <td className={TD}>{b.project.replace(/^New /, '')}</td>
+      <td className={TD}>{b.lead}</td>
+      <td className={TD}>
+        <span className={cn('inline-block px-2 py-0.5 rounded-full text-[0.65rem] font-bold tracking-[0.04em] uppercase whitespace-nowrap', badgeCls)}>
+          {b.priority}
+        </span>
+      </td>
+      <td className={TD}>
+        <span className="inline-block px-2 py-0.5 rounded-full text-[0.65rem] font-semibold bg-muted text-muted-foreground whitespace-nowrap">
+          {b.status}
+        </span>
+      </td>
+      <td className={TD}>{created}</td>
+      <td className={cn(TD, 'text-right text-muted-foreground tabular-nums', ageCls)}>{age.toLocaleString()}</td>
+    </tr>
+  );
+}
+
 function SortIcon({ col, sortCol, sortDir }: { col: SortCol; sortCol: SortCol; sortDir: SortDir }) {
   if (sortCol !== col) return <span className="opacity-40 text-[0.75em] ml-1">⇅</span>;
   return <span className="text-primary-clementine-900 text-[0.75em] ml-1">{sortDir === 1 ? '▲' : '▼'}</span>;
@@ -34,13 +67,13 @@ function SortIcon({ col, sortCol, sortDir }: { col: SortCol; sortCol: SortCol; s
 
 export function OpenBugsTable() {
   const bugs = useBugReportStore((s) => s.bugs);
-  const [search, setSearch]               = useState('');
+  const [search, setSearch] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
-  const [statusFilter, setStatusFilter]     = useState('');
-  const [projectFilter, setProjectFilter]   = useState('');
-  const [sortCol, setSortCol]               = useState<SortCol>('priority');
-  const [sortDir, setSortDir]               = useState<SortDir>(1);
-  const [page, setPage]                     = useState(1);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [projectFilter, setProjectFilter] = useState('');
+  const [sortCol, setSortCol] = useState<SortCol>('priority');
+  const [sortDir, setSortDir] = useState<SortDir>(1);
+  const [page, setPage] = useState(1);
 
   const statuses = useMemo(() => [...new Set(bugs.map((b) => b.status))].sort(), [bugs]);
   const projects = useMemo(() => [...new Set(bugs.map((b) => b.project))].sort(), [bugs]);
@@ -49,8 +82,8 @@ export function OpenBugsTable() {
     const q = search.toLowerCase();
     return bugs.filter((b) => {
       if (priorityFilter && b.priority !== priorityFilter) return false;
-      if (statusFilter  && b.status   !== statusFilter)   return false;
-      if (projectFilter && b.project  !== projectFilter)  return false;
+      if (statusFilter && b.status !== statusFilter) return false;
+      if (projectFilter && b.project !== projectFilter) return false;
       if (q && !`${b.key} ${b.summary} ${b.project} ${b.lead} ${b.status}`.toLowerCase().includes(q)) return false;
       return true;
     });
@@ -72,13 +105,13 @@ export function OpenBugsTable() {
         bv = ((b[sortCol as keyof Bug] as string) || '').toLowerCase();
       }
       if (av < bv) return -1 * sortDir;
-      if (av > bv) return  1 * sortDir;
+      if (av > bv) return 1 * sortDir;
       return 0;
     });
   }, [filtered, sortCol, sortDir]);
 
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
-  const pageData   = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageData = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   function handleSort(col: SortCol) {
     if (sortCol === col) setSortDir((d) => (d === 1 ? -1 : 1));
@@ -92,7 +125,7 @@ export function OpenBugsTable() {
   const inputCls = 'px-3 py-2 border border-border rounded-md bg-secondary text-foreground text-xs outline-none transition-colors focus:border-primary-clementine-900';
 
   return (
-    <section id="section-open-bugs" className="scroll-mt-14 flex flex-col gap-4">
+    <section id="section-open-bugs" className="scroll-mt-14 flex flex-col gap-4 print:break-before-page">
       <div className={SECTION_LABEL}>All Open Bugs</div>
       <div className="bg-card rounded-xl border border-border shadow-xs p-6 flex flex-col gap-4">
         <div className="flex flex-col gap-1">
@@ -150,45 +183,19 @@ export function OpenBugsTable() {
                 </th>
               </tr>
             </thead>
-            <tbody>
-              {pageData.map((b) => {
-                const age = getAge(b);
-                const ageCls = age > 365 ? 'text-[#dc2626]! font-bold' : age > 180 ? 'text-[#d97706]! font-semibold' : '';
-                const badgeCls = PRIORITY_BADGE[b.priority] || PRIORITY_BADGE.Medium;
-                const created = b.created
-                  ? new Date(b.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                  : '-';
-                return (
-                  <tr key={b.key} className="hover:bg-secondary/50">
-                    <td className={TD}>
-                      <span className="font-mono font-semibold text-primary-clementine-900 whitespace-nowrap">{b.key}</span>
-                    </td>
-                    <td className={cn(TD, 'max-w-70 overflow-hidden text-ellipsis text-muted-foreground italic')} title={b.summary || ''}>
-                      {b.summary || '-'}
-                    </td>
-                    <td className={TD}>{b.project.replace(/^New /, '')}</td>
-                    <td className={TD}>{b.lead}</td>
-                    <td className={TD}>
-                      <span className={cn('inline-block px-2 py-0.5 rounded-full text-[0.65rem] font-bold tracking-[0.04em] uppercase whitespace-nowrap', badgeCls)}>
-                        {b.priority}
-                      </span>
-                    </td>
-                    <td className={TD}>
-                      <span className="inline-block px-2 py-0.5 rounded-full text-[0.65rem] font-semibold bg-muted text-muted-foreground whitespace-nowrap">
-                        {b.status}
-                      </span>
-                    </td>
-                    <td className={TD}>{created}</td>
-                    <td className={cn(TD, 'text-right text-muted-foreground tabular-nums', ageCls)}>{age.toLocaleString()}</td>
-                  </tr>
-                );
-              })}
+            {/* Screen: paginated rows */}
+            <tbody className="print:hidden">
+              {pageData.map((b) => <BugRow key={b.key} b={b} />)}
+            </tbody>
+            {/* Print: all rows, no pagination */}
+            <tbody className="hidden print:table-row-group">
+              {sorted.map((b) => <BugRow key={b.key} b={b} />)}
             </tbody>
           </table>
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between flex-wrap gap-2 pt-3 pb-1 border-t border-border mt-3">
+          <div className="print:hidden flex items-center justify-between flex-wrap gap-2 pt-3 pb-1 border-t border-border mt-3">
             <span className="text-xs text-muted-foreground">
               Page {page} of {totalPages} &nbsp;·&nbsp; {filtered.length} bugs
             </span>

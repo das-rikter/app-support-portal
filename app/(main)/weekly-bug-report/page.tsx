@@ -82,6 +82,13 @@ const getWeekRange = (date: Date): { start: string; end: string } => {
 
 const { start, end } = getWeekRange(getDayFromLastWeek());
 
+const printPage = (customName: string) => {
+  const originalTitle = document.title;
+  document.title = customName;
+  window.print();
+  document.title = originalTitle;
+};
+
 const LoadingSkeleton = () => (
   <div className="space-y-6 pt-6">
     <PageHeader
@@ -90,20 +97,16 @@ const LoadingSkeleton = () => (
     />
     <Card>
       <CardContent className="p-6 space-y-6">
-        {/* KPI row */}
         <div className="grid grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-2xl" />
           ))}
         </div>
-        {/* Chart row */}
         <div className="grid grid-cols-2 gap-4">
           <Skeleton className="h-64 rounded-2xl" />
           <Skeleton className="h-64 rounded-2xl" />
         </div>
-        {/* Wide chart */}
         <Skeleton className="h-48 rounded-2xl" />
-        {/* Table */}
         <div className="space-y-2">
           <Skeleton className="h-10 rounded-lg" />
           {Array.from({ length: 6 }).map((_, i) => (
@@ -135,7 +138,7 @@ const WeeklyBugReportPage = () => {
     if (weeklyIssues) {
       setWeeklyBugs(weeklyIssues, { start, end });
     }
-  }, [weeklyIssues, setWeeklyBugs]);
+  }, [weeklyIssues, setWeeklyBugs, start, end]);
 
   useEffect(() => {
     if (historicalIssues) {
@@ -149,17 +152,48 @@ const WeeklyBugReportPage = () => {
 
   return (
     <div className="space-y-6 pt-6">
-      <PageHeader
-        title="Weekly Bug Report"
-        description="Monitor and manage weekly bug reports."
-      />
+      <div className="flex items-start justify-between gap-4">
+        <PageHeader
+          title="Weekly Bug Report"
+          description="Monitor and manage weekly bug reports."
+        />
+        <div className="no-print mt-1 flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => printPage(`Weekly Bug Report - Week of ${start} to ${end}`)}
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/70 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect width="12" height="8" x="6" y="14" />
+            </svg>
+            Export PDF
+          </button>
+        </div>
+      </div>
+
+      {/* Only visible when printing */}
+      <div className="print-report-header hidden">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <div style={{ fontSize: '18pt', fontWeight: 700, color: '#111827' }}>Weekly Bug Report</div>
+            <div style={{ fontSize: '11pt', color: '#6b7280', marginTop: 4 }}>Week of {start} — {end}</div>
+          </div>
+          <div style={{ fontSize: '9pt', color: '#9ca3af' }}>
+            Digital Air Strike · Printed {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </div>
+        </div>
+      </div>
+
       <Card>
         <CardContent>
           <NavTabs />
           <div className="px-1 flex flex-col gap-8 pb-16 pt-8">
             <KpiSection />
             <BugsByProjectChart />
-            <PriorityCharts />
+            <div className="print:break-before-page">
+              <PriorityCharts />
+            </div>
             <AgeCharts />
             <TimelineChart />
             <StatusTable />
@@ -171,6 +205,6 @@ const WeeklyBugReportPage = () => {
       </Card>
     </div>
   );
-}
+};
 
 export default WeeklyBugReportPage;
