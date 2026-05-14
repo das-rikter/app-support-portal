@@ -47,7 +47,11 @@
       "Bash(New-Item -ItemType Directory -Force \"c:\\\\git\\\\app-support-portal\\\\app\\\\api\\\\betterstack\\\\history\")",
       "Bash(Out-Null)",
       "Bash(Write-Output \"done\")",
-      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\git\\\\app-support-portal\\\\app\\\\api\\\\betterstack\\\\history\")"
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\git\\\\app-support-portal\\\\app\\\\api\\\\betterstack\\\\history\")",
+      "Bash(Test-Path \"c:\\\\git\\\\app-support-portal\\\\app\\\\\\(main\\)\\\\admin\\\\users\\\\page.tsx\")",
+      "Bash(node -e \"const z = require\\('zod'\\); console.log\\(typeof z.z.iso\\);\")",
+      "Bash(node -e \"const z = require\\('zod'\\); console.log\\(Object.keys\\(z.z\\).filter\\(k => k.includes\\('iso'\\)\\)\\);\")",
+      "Bash(node -e \"const z = require\\('zod'\\); console.log\\(Object.keys\\(z.z.iso\\)\\);\")"
     ],
     "additionalDirectories": [
       "c:\\git\\app-support-portal\\app\\api\\incidents"

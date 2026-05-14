@@ -1,3 +1,8 @@
+export interface DayStatus {
+  date: string;
+  status: "up" | "down" | "maintenance";
+}
+
 export interface MonitorGroup {
   name: string;
   monitors: string[];

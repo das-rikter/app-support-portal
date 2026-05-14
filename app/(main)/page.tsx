@@ -1,7 +1,7 @@
 "use client";
 
-import type { DayStatus } from "@/app/api/betterstack/history/route";
 import { GROUPED_MONITOR_NAMES, MONITOR_GROUPS } from "@/lib/monitorGroups";
+import type { DayStatus } from "@/lib/monitorGroups";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, RefreshCw, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";

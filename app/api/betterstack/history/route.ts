@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { GROUPED_MONITOR_NAMES } from "@/lib/monitorGroups";
+import type { DayStatus } from "@/lib/monitorGroups";
 import { NextResponse } from "next/server";
 
 const log = logger.child({ route: "betterstack/history" });
@@ -24,22 +25,18 @@ interface BetterStackIncident {
   };
 }
 
-export interface DayStatus {
-  date: string;
-  status: "up" | "down" | "maintenance";
-}
 
 async function fetchAllMonitors(apiKey: string, revalidate: number): Promise<BetterStackMonitor[]> {
   const all: BetterStackMonitor[] = [];
   let url: string | null = "https://uptime.betterstack.com/api/v2/monitors?per_page=250";
 
   while (url) {
-    const res = await fetch(url, {
+    const res: Response = await fetch(url, {
       headers: { Authorization: `Bearer ${apiKey}` },
       next: { revalidate },
     });
     if (!res.ok) break;
-    const body = await res.json();
+    const body = await res.json() as { data: BetterStackMonitor[]; pagination?: { next?: string | null } };
     all.push(...body.data);
     url = body.pagination?.next ?? null;
   }
