@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useJiraHistoricalIssues, useJiraWeeklyIssues } from '@/hooks/useJiraIssues';
 import { useBugReportStore } from '@/store/useBugReportStore';
+import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 
 const JIRA_WEEKLY_STATUSES = [
@@ -119,6 +120,10 @@ const LoadingSkeleton = () => (
 );
 
 const WeeklyBugReportPage = () => {
+  const { data: session } = useSession();
+  const role = session?.user?.role ?? 'Viewer';
+  const isAdmin = role === 'Admin';
+
   const setBugs = useBugReportStore((s) => s.setBugs);
   const setWeeklyBugs = useBugReportStore((s) => s.setWeeklyBugs);
 
@@ -157,19 +162,21 @@ const WeeklyBugReportPage = () => {
           title="Weekly Bug Report"
           description={`Week of ${new Date(start).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} - ${new Date(end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
         />
-        <div className="no-print mt-1 flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => printPage(`Weekly Bug Report - Week of ${start} to ${end}`)}
-            className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/70 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 6 2 18 2 18 9" />
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-              <rect width="12" height="8" x="6" y="14" />
-            </svg>
-            Export PDF
-          </button>
-        </div>
+        {isAdmin && (
+          <div className="no-print mt-1 flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => printPage(`Weekly Bug Report - Week of ${start} to ${end}`)}
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/70 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect width="12" height="8" x="6" y="14" />
+              </svg>
+              Export PDF
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Only visible when printing */}

@@ -130,6 +130,76 @@ export const JiraSearchResultSchema = z.object({
 
 export type JiraSearchResult = z.infer<typeof JiraSearchResultSchema>;
 
+// --- DB-backed Incident (PostgreSQL) ---
+
+export const DbIncidentSchema = z.object({
+  id: z.number(),
+  product: z.string(),
+  fn: z.string(),
+  owner: z.string(),
+  lead: z.string(),
+  sev: z.enum(["P1", "P2", "P3", "P4"]),
+  title: z.string(),
+  month: z.string(),
+  date: z.string(),
+  startTime: z.string(),
+  closureDate: z.string(),
+  closureTime: z.string(),
+  incidentLength: z.string(),
+  resolutionDate: z.string(),
+  resolutionTime: z.string(),
+  downtime: z.string(),
+  alerted: z.union([z.literal(0), z.literal(1)]),
+  alertSrc: z.string(),
+  cause: z.string(),
+  reoccurring: z.union([z.literal(0), z.literal(1)]),
+  dasCaused: z.union([z.literal(0), z.literal(1)]),
+  postmortem: z.enum(["Yes", "No", "N/A"]).optional(),
+});
+
+export type DbIncident = z.infer<typeof DbIncidentSchema>;
+
+export const IncidentFormSchema = z.object({
+  product: z.string().min(1, "Product is required"),
+  fn: z.string().default(""),
+  owner: z.string().default(""),
+  lead: z.string().default(""),
+  sev: z.enum(["P1", "P2", "P3", "P4"]),
+  title: z.string().min(1, "Title is required"),
+  month: z.string().default(""),
+  date: z.string().min(1, "Date is required"),
+  startTime: z.string().default(""),
+  closureDate: z.string().default(""),
+  closureTime: z.string().default(""),
+  incidentLength: z.string().default(""),
+  resolutionDate: z.string().default(""),
+  resolutionTime: z.string().default(""),
+  downtime: z.string().default(""),
+  alerted: z.boolean().default(false),
+  alertSrc: z.string().default(""),
+  cause: z.string().default(""),
+  reoccurring: z.boolean().default(false),
+  dasCaused: z.boolean().default(false),
+  postmortem: z.enum(["Yes", "No", "N/A"]).optional(),
+});
+
+export type IncidentForm = z.infer<typeof IncidentFormSchema>;
+
+// --- User ---
+
+export const UserSchema = z.object({
+  id: z.number(),
+  email: z.string().email(),
+  name: z.string(),
+  role: z.enum(["Admin", "Viewer"]),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type AppUser = z.infer<typeof UserSchema>;
+
+// --- Jira ---
+
 export const JiraProjectSchema = z.object({
   id: z.string(),
   key: z.string(),

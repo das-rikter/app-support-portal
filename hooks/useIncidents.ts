@@ -1,51 +1,60 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { IncidentSchema, CreateIncidentFormSchema } from "@/schemas";
-import type { Incident, CreateIncidentForm } from "@/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Incident } from "@/types/incident";
+import type { IncidentForm } from "@/schemas";
 
-// --- Query key factory ---
 export const incidentKeys = {
   all: ["incidents"] as const,
   lists: () => [...incidentKeys.all, "list"] as const,
-  list: (filters: Record<string, unknown>) =>
-    [...incidentKeys.lists(), { filters }] as const,
-  detail: (id: string) => [...incidentKeys.all, "detail", id] as const,
+  detail: (id: number) => [...incidentKeys.all, "detail", id] as const,
 };
 
-// --- Hooks ---
-
-export function useIncidents(filters?: Record<string, string | undefined>) {
-  return useQuery({
-    queryKey: incidentKeys.list(filters ?? {}),
-    queryFn: async (): Promise<Incident[]> => {
-      const data = await apiClient.get<unknown>("/incidents", filters);
-      return IncidentSchema.array().parse(data);
-    },
-  });
+async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+  const res = await fetch(input, init);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error ?? `HTTP ${res.status}`);
+  }
+  return res.json() as Promise<T>;
 }
 
-export function useIncident(id: string) {
+export function useIncidents() {
   return useQuery({
-    queryKey: incidentKeys.detail(id),
-    queryFn: async (): Promise<Incident> => {
-      const data = await apiClient.get<unknown>(`/incidents/${id}`);
-      return IncidentSchema.parse(data);
-    },
-    enabled: !!id,
+    queryKey: incidentKeys.lists(),
+    queryFn: () => fetchJson<Incident[]>("/api/incidents"),
   });
 }
 
 export function useCreateIncident() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (payload: CreateIncidentForm): Promise<Incident> => {
-      const validated = CreateIncidentFormSchema.parse(payload);
-      const data = await apiClient.post<unknown>("/incidents", validated);
-      return IncidentSchema.parse(data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: incidentKeys.lists() });
-    },
+    mutationFn: (payload: IncidentForm) =>
+      fetchJson<Incident>("/api/incidents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: incidentKeys.lists() }),
+  });
+}
+
+export function useUpdateIncident() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...payload }: IncidentForm & { id: number }) =>
+      fetchJson<Incident>(`/api/incidents/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: incidentKeys.lists() }),
+  });
+}
+
+export function useDeleteIncident() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      fetchJson<{ success: boolean }>(`/api/incidents/${id}`, { method: "DELETE" }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: incidentKeys.lists() }),
   });
 }

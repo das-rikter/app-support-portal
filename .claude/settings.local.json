@@ -35,7 +35,22 @@
       "Bash(del \"components\\\\bug-report\\\\DashboardToolbar.tsx\")",
       "Bash(Get-ChildItem -Force)",
       "Bash(Test-Path middleware.ts)",
-      "Bash(xargs grep -l \"auth\\\\|session\\\\|redirect\")"
+      "Bash(xargs grep -l \"auth\\\\|session\\\\|redirect\")",
+      "Bash(Get-ChildItem -Recurse -Force -Name)",
+      "Bash(Select-Object -First 200)",
+      "Bash(mkdir -p \"c:\\\\git\\\\app-support-portal\\\\app\\\\api\\\\incidents\\\\[id]\" 2>/dev/null; echo \"done\")",
+      "Bash(docker compose *)",
+      "Bash(docker exec *)",
+      "Bash(DATABASE_URL=\"postgresql://user:pass@localhost:5432/app_support_portal\" npm run db:migrate)",
+      "Bash(DATABASE_URL=\"postgresql://user:pass@localhost:5432/app_support_portal\" npx drizzle-kit migrate)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(New-Item -ItemType Directory -Force \"c:\\\\git\\\\app-support-portal\\\\app\\\\api\\\\betterstack\\\\history\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Output \"done\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\git\\\\app-support-portal\\\\app\\\\api\\\\betterstack\\\\history\")"
+    ],
+    "additionalDirectories": [
+      "c:\\git\\app-support-portal\\app\\api\\incidents"
     ]
   }
 }

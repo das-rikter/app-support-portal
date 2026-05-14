@@ -1,4 +1,5 @@
 export interface Incident {
+  id?: number;
   product: string;
   fn: string;
   owner: string;
