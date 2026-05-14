@@ -31,7 +31,11 @@
       "Bash(Select-Object FullName)",
       "Bash(npm audit *)",
       "Bash(npm list *)",
-      "Bash(npm show *)"
+      "Bash(npm show *)",
+      "Bash(del \"components\\\\bug-report\\\\DashboardToolbar.tsx\")",
+      "Bash(Get-ChildItem -Force)",
+      "Bash(Test-Path middleware.ts)",
+      "Bash(xargs grep -l \"auth\\\\|session\\\\|redirect\")"
     ]
   }
 }

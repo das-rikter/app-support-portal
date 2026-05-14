@@ -138,7 +138,7 @@ const WeeklyBugReportPage = () => {
     if (weeklyIssues) {
       setWeeklyBugs(weeklyIssues, { start, end });
     }
-  }, [weeklyIssues, setWeeklyBugs, start, end]);
+  }, [weeklyIssues, setWeeklyBugs]);
 
   useEffect(() => {
     if (historicalIssues) {

@@ -25,9 +25,17 @@ export interface JiraWeeklyParams extends JiraBaseParams {
 
 export type JiraHistoricalParams = JiraBaseParams;
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Escape backslashes and double-quotes inside a JQL string literal.
+const escapeJqlString = (s: string): string => s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+
 const buildWeeklyJql = (params: JiraWeeklyParams): string => {
+  if (!DATE_RE.test(params.updatedAfter) || !DATE_RE.test(params.updatedBefore)) {
+    throw new Error("Invalid date format: expected YYYY-MM-DD");
+  }
   const projects = JIRA_PROJECTS.join(", ");
-  const statuses = params.statuses.map((s) => `"${s}"`).join(", ");
+  const statuses = params.statuses.map((s) => `"${escapeJqlString(s)}"`).join(", ");
   const jql = [
     `project IN (${projects})`,
     `type = Bug`,
@@ -41,7 +49,7 @@ const buildWeeklyJql = (params: JiraWeeklyParams): string => {
 
 const buildHistoricalJql = (params: JiraHistoricalParams): string => {
   const projects = JIRA_PROJECTS.join(", ");
-  const statuses = params.statuses.map((s: string) => `"${s}"`).join(", ");
+  const statuses = params.statuses.map((s: string) => `"${escapeJqlString(s)}"`).join(", ");
   const jql = [
     `project IN (${projects})`,
     `status IN (${statuses})`,
