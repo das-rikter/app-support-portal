@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import logger from "@/lib/logger";
-import { GROUPED_MONITOR_NAMES } from "@/lib/monitorGroups";
+import { GROUPED_MONITOR_NAMES, normalizeMonitorName } from "@/lib/monitorGroups";
 import type { DayStatus } from "@/lib/monitorGroups";
 import { NextResponse } from "next/server";
 
@@ -111,7 +111,7 @@ export async function GET() {
   try {
     const allMonitors = await fetchAllMonitors(apiKey, ttl);
     const grouped = allMonitors.filter((m) =>
-      GROUPED_MONITOR_NAMES.has(m.attributes.pronounceable_name.toLowerCase())
+      GROUPED_MONITOR_NAMES.has(normalizeMonitorName(m.attributes.pronounceable_name))
     );
 
     log.debug({ total: allMonitors.length, grouped: grouped.length }, "fetched monitors for history");
@@ -123,7 +123,7 @@ export async function GET() {
       grouped.map(async (m) => {
         const incidents = await fetchIncidents(apiKey, m.id, from, ttl);
         return {
-          name: m.attributes.pronounceable_name.toLowerCase(),
+          name: normalizeMonitorName(m.attributes.pronounceable_name),
           history: computeDayStatuses(incidents, HISTORY_DAYS),
         };
       })

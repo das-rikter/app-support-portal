@@ -8,6 +8,13 @@
       "when": 1778784580474,
       "tag": "0000_milky_obadiah_stane",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1747353600000,
+      "tag": "0001_incident_schema_v2",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { GROUPED_MONITOR_NAMES, MONITOR_GROUPS } from "@/lib/monitorGroups";
 import type { DayStatus } from "@/lib/monitorGroups";
+import { GROUPED_MONITOR_NAMES, MONITOR_GROUPS, normalizeMonitorName } from "@/lib/monitorGroups";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, RefreshCw, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -50,12 +50,12 @@ function HistoryBars({ history }: { history?: DayStatus[] }) {
           key={day.date}
           title={`${new Date(day.date).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}: ${day.status}`}
           className={`inline-block h-4 w-0.75 rounded-sm ${day.status === "up"
-              ? "bg-[#16a34a]"
-              : day.status === "down"
-                ? "bg-[#dc2626]"
-                : day.status === "maintenance"
-                  ? "bg-[#d97706]"
-                  : "bg-muted"
+            ? "bg-[#16a34a]"
+            : day.status === "down"
+              ? "bg-[#dc2626]"
+              : day.status === "maintenance"
+                ? "bg-[#d97706]"
+                : "bg-muted"
             }`}
         />
       ))}
@@ -96,10 +96,10 @@ function GroupCard({ group, monitors, history }: {
   monitors: Monitor[];
   history: HistoryMap | undefined;
 }) {
-  const byName = new Map(monitors.map((m) => [m.name.toLowerCase(), m]));
+  const byName = new Map(monitors.map((m) => [normalizeMonitorName(m.name), m]));
   const groupMonitors = group.monitors.map(
     (name) =>
-      byName.get(name.toLowerCase()) ?? {
+      byName.get(normalizeMonitorName(name)) ?? {
         id: name,
         name,
         url: "",
@@ -141,7 +141,7 @@ function GroupCard({ group, monitors, history }: {
             <MonitorRow
               key={`${group.name}-${m.name}`}
               monitor={m}
-              history={history?.[m.name.toLowerCase()]}
+              history={history?.[normalizeMonitorName(m.name)]}
             />
           ))}
         </div>
@@ -179,7 +179,7 @@ export default function StatusPage() {
   });
 
   const groupedMonitors = useMemo(
-    () => monitors?.filter((m) => GROUPED_MONITOR_NAMES.has(m.name.toLowerCase())),
+    () => monitors?.filter((m) => GROUPED_MONITOR_NAMES.has(normalizeMonitorName(m.name))),
     [monitors]
   );
   const activeMonitors = useMemo(

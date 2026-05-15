@@ -51,7 +51,10 @@
       "Bash(Test-Path \"c:\\\\git\\\\app-support-portal\\\\app\\\\\\(main\\)\\\\admin\\\\users\\\\page.tsx\")",
       "Bash(node -e \"const z = require\\('zod'\\); console.log\\(typeof z.z.iso\\);\")",
       "Bash(node -e \"const z = require\\('zod'\\); console.log\\(Object.keys\\(z.z\\).filter\\(k => k.includes\\('iso'\\)\\)\\);\")",
-      "Bash(node -e \"const z = require\\('zod'\\); console.log\\(Object.keys\\(z.z.iso\\)\\);\")"
+      "Bash(node -e \"const z = require\\('zod'\\); console.log\\(Object.keys\\(z.z.iso\\)\\);\")",
+      "Bash(npx drizzle-kit *)",
+      "Bash(npx tsx *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\git\\\\app-support-portal\" -Filter \"csvParser*\" -Recurse)"
     ],
     "additionalDirectories": [
       "c:\\git\\app-support-portal\\app\\api\\incidents"

@@ -21,17 +21,17 @@ export const MONITOR_GROUPS: MonitorGroup[] = [
     name: "Awareness Solutions",
     monitors: ["AdCenter", "AdCenter - Reseller Portal", "AdEz", "Amazon OTT", "Search Results Pages", "TikTok Advertising"],
   },
-  {
-    name: "BestRide",
-    monitors: ["BestRide", "BestRide.com Blog", "BestRide Dashboard", "BestRide Validation Services"],
-  },
+  // {
+  //   name: "BestRide",
+  //   monitors: ["BestRide", "BestRide.com Blog", "BestRide Dashboard", "BestRide Validation Services"],
+  // },
   {
     name: "Consumer Data & Experience Platform",
     monitors: ["CDXP Platform", "CDXP Accelerator", "Digital Dealer Evaluation - Reporting"],
   },
   {
     name: "General or Shared Infrastructure",
-    monitors: ["Communication API", "DAS API", "Vonage", "DAS Feedhub", "Microsoft Outlook", "General Motors - Dealer Program Enrollment"],
+    monitors: ["Communication API", "DAS API", "DAS Feedhub", "Microsoft Outlook", "General Motors - Dealer Program Enrollment"],
   },
   {
     name: "LotVantage",
@@ -47,6 +47,14 @@ export const MONITOR_GROUPS: MonitorGroup[] = [
   },
 ];
 
+export const normalizeMonitorName = (name: string): string => name
+  .toLowerCase()
+  .trim()
+  .replace(/[\s ]+/g, " ")
+  .replace(/[–—]/g, "-")
+  .replace(/['']/g, "'")
+  .replace(/[""]/g, '"');
+
 export const GROUPED_MONITOR_NAMES = new Set(
-  MONITOR_GROUPS.flatMap((g) => g.monitors.map((n) => n.toLowerCase()))
+  MONITOR_GROUPS.flatMap((g) => g.monitors.map(normalizeMonitorName))
 );

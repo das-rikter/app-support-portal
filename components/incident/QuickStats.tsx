@@ -8,7 +8,7 @@ export function QuickStats() {
   const filtered = useIncidentStore((s) => s.filtered);
 
   const total = filtered.length;
-  const p1 = filtered.filter((d) => d.sev === 'P1').length;
+  const p1 = filtered.filter((d) => d.severity === 'P1').length;
   const outageHrs = filtered.reduce((s, d) => s + parseOutageHrs(d.downtime), 0);
   const dasCaused = filtered.filter((d) => d.dasCaused === 1).length;
 

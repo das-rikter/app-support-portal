@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { Incident, IncidentView } from '@/types/incident';
-import { extractYear } from '@/lib/incidentUtils';
+import { extractYear, getMonthFromDate } from '@/lib/incidentUtils';
 
 const CURRENT_YEAR = String(new Date().getFullYear());
 
@@ -37,9 +37,9 @@ function applyFilters(incidents: Incident[], filters: IncidentFilters): Incident
     if (filters.year) {
       if (extractYear(d.date ?? '') !== filters.year) return false;
     }
-    if (filters.month && d.month !== filters.month) return false;
+    if (filters.month && getMonthFromDate(d.date ?? '') !== filters.month) return false;
     if (filters.product && d.product !== filters.product) return false;
-    if (filters.severity && d.sev !== filters.severity) return false;
+    if (filters.severity && d.severity !== filters.severity) return false;
     if (filters.ownership) {
       const internal = d.dasCaused === 1;
       if (filters.ownership === 'Internal' && !internal) return false;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useDeleteIncident } from "@/hooks/useIncidents";
-import { parseOutageHrs } from "@/lib/incidentUtils";
+import { formatMinutes, parseOutageHrs } from "@/lib/incidentUtils";
 import { useIncidentStore } from "@/store/useIncidentStore";
 import type { Incident } from "@/types/incident";
 import { Pencil, Trash2 } from "lucide-react";
@@ -49,7 +49,7 @@ export function IncidentsView({ role, onEdit }: Props) {
         !q ||
         d.title.toLowerCase().includes(q) ||
         d.product.toLowerCase().includes(q) ||
-        d.fn.toLowerCase().includes(q) ||
+        d.function.toLowerCase().includes(q) ||
         (d.cause || "").toLowerCase().includes(q)
     );
     r = [...r].sort((a, b) => {
@@ -61,8 +61,8 @@ export function IncidentsView({ role, onEdit }: Props) {
         va = a.product;
         vb = b.product;
       } else if (sortCol === "severity") {
-        va = ["P1", "P2", "P3", "P4"].indexOf(a.sev);
-        vb = ["P1", "P2", "P3", "P4"].indexOf(b.sev);
+        va = ["P1", "P2", "P3", "P4"].indexOf(a.severity);
+        vb = ["P1", "P2", "P3", "P4"].indexOf(b.severity);
       } else {
         va = parseOutageHrs(a.downtime);
         vb = parseOutageHrs(b.downtime);
@@ -132,7 +132,6 @@ export function IncidentsView({ role, onEdit }: Props) {
                 <th className={TH}>Cause</th>
                 <th className={TH}>Ownership</th>
                 <th className={TH}>Alert</th>
-                <th className={TH}>Reoccurring</th>
                 {isAdmin && <th className={TH}>Actions</th>}
               </tr>
             </thead>
@@ -141,14 +140,13 @@ export function IncidentsView({ role, onEdit }: Props) {
                 <tr key={d.id ?? i} className="hover:bg-secondary/50">
                   <td className={TD + " tabular-nums text-xs font-medium text-muted-foreground whitespace-nowrap"}>{d.date}</td>
                   <td className={TD + " font-semibold"}>{d.product}</td>
-                  <td className={TD + " text-muted-foreground text-xs"}>{d.fn}</td>
-                  <td className={TD}><span className={SEV_CLASS[d.sev]}>{d.sev}</span></td>
+                  <td className={TD + " text-muted-foreground text-xs"}>{d.function}</td>
+                  <td className={TD}><span className={SEV_CLASS[d.severity]}>{d.severity}</span></td>
                   <td className={TD + " max-w-60"}>{d.title}</td>
-                  <td className={TD + " tabular-nums text-xs font-medium"}>{d.downtime || "—"}</td>
+                  <td className={TD + " tabular-nums text-xs font-medium"}>{formatMinutes(d.downtime)}</td>
                   <td className={TD + " text-muted-foreground text-xs"}>{d.cause || "—"}</td>
                   <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.external}>{d.dasCaused ? "Internal" : "External"}</span></td>
                   <td className={TD}><span className={d.alerted ? CHIP.yes : CHIP.no}>{d.alerted ? "Yes" : "No"}</span></td>
-                  <td className={TD}><span className={d.reoccurring ? CHIP.yes : CHIP.no}>{d.reoccurring ? "Yes" : "No"}</span></td>
                   {isAdmin && (
                     <td className={TD}>
                       <div className="flex gap-1">

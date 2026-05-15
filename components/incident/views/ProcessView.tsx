@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useIncidentStore } from '@/store/useIncidentStore';
 import { PlotlyChart } from '@/components/incident/PlotlyChart';
-import { parseOutageHrs, isMultiApp, MONTH_ORDER, CHART_COLORS, chartBase } from '@/lib/incidentUtils';
+import { parseOutageHrs, isMultiApp, MONTH_ORDER, CHART_COLORS, chartBase, getMonthFromDate } from '@/lib/incidentUtils';
 import type { Incident } from '@/types/incident';
 
 const c = CHART_COLORS;
@@ -46,7 +46,7 @@ function buildAlertSourceChart(data: Incident[]) {
 function buildAlertCoverageChart(data: Incident[], allMonths: string[]) {
   const alertByMonth: Record<string, number> = {};
   allMonths.forEach((m) => {
-    const mData = data.filter((d) => d.month === m);
+    const mData = data.filter((d) => getMonthFromDate(d.date) === m);
     alertByMonth[m] = mData.length
       ? Math.round((mData.filter((d) => d.alerted === 1).length / mData.length) * 100)
       : 0;
@@ -128,7 +128,6 @@ function kpis(data: Incident[]) {
     total,
     alertedCount,
     alertPct: Math.round((alertedCount / Math.max(total, 1)) * 100),
-    reoccurN: data.filter((d) => d.reoccurring === 1).length,
     dasCausedN: data.filter((d) => d.dasCaused === 1).length,
   };
 }
@@ -160,9 +159,9 @@ function KpiCard({ accent, children }: { accent: 'accent' | 'blue' | 'green' | '
   );
 }
 
-function KpiSection({ sa, label }: { sa: ReturnType<typeof kpis>; label: string }) {
+function KpiSection({ sa }: { sa: ReturnType<typeof kpis> }) {
   return (
-    <div className="grid grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-2 gap-4 mb-6">
       <KpiCard accent="green">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 bg-[rgba(22,163,74,0.12)] dark:bg-[rgba(22,163,74,0.18)]">
           <svg className="w-4 h-4 text-[#16a34a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -172,16 +171,6 @@ function KpiSection({ sa, label }: { sa: ReturnType<typeof kpis>; label: string 
         <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">Alert Coverage</div>
         <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{sa.alertPct}%</div>
         <div className="mt-2 text-xs text-muted-foreground">{sa.alertedCount} of {sa.total} alerted</div>
-      </KpiCard>
-      <KpiCard accent="warn">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 bg-[rgba(217,119,6,0.12)] dark:bg-[rgba(217,119,6,0.18)]">
-          <svg className="w-4 h-4 text-[#d97706]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 .49-3.5" />
-          </svg>
-        </div>
-        <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">Reoccurring Issues</div>
-        <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{sa.reoccurN}</div>
-        <div className="mt-2 text-xs text-muted-foreground">Repeat incidents</div>
       </KpiCard>
       <KpiCard accent="accent">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 bg-[rgba(214,106,6,0.10)] dark:bg-[rgba(214,106,6,0.18)]">
@@ -205,12 +194,12 @@ export function ProcessView() {
   const multiApp = useMemo(() => filtered.filter((d) => isMultiApp(d.product)), [filtered]);
 
   const ALL_MONTHS = useMemo(() =>
-    [...new Set(incidents.filter((d) => !isMultiApp(d.product)).map((d) => d.month))].sort(
+    [...new Set(incidents.filter((d) => !isMultiApp(d.product)).map((d) => getMonthFromDate(d.date)).filter(Boolean))].sort(
       (a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b)
     ), [incidents]);
 
   const ALL_MONTHS_MA = useMemo(() =>
-    [...new Set(incidents.filter((d) => isMultiApp(d.product)).map((d) => d.month))].sort(
+    [...new Set(incidents.filter((d) => isMultiApp(d.product)).map((d) => getMonthFromDate(d.date)).filter(Boolean))].sort(
       (a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b)
     ), [incidents]);
 
@@ -228,7 +217,7 @@ export function ProcessView() {
   return (
     <div>
       {/* ── Single-Application KPIs ── */}
-      <KpiSection sa={sa} label="single-app" />
+      <KpiSection sa={sa} />
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
@@ -271,7 +260,7 @@ export function ProcessView() {
         <>
           <MultiAppDivider />
 
-          <KpiSection sa={ma} label="multi-app" />
+          <KpiSection sa={ma} />
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">

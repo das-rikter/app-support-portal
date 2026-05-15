@@ -4,29 +4,36 @@ export function isMultiApp(product: string): boolean {
   return product.includes('&') || product.includes(',');
 }
 
-export function parseOutageHrs(s: string): number {
+export function parseOutageHrs(s: string | number): number {
+  if (typeof s === 'number') return s / 60;
   if (!s) return 0;
   const cleaned = s.replace(/\s/g, '').toLowerCase();
   const p = cleaned.split(':');
   if (p.length >= 2) {
-    // HH:MM format
-    const hours = parseInt(p[0]) || 0;
-    const minutes = parseInt(p[1]) || 0;
-    return hours + minutes / 60;
-  } else if (p.length === 1) {
-    // Single value
-    const num = parseFloat(cleaned);
-    if (!isNaN(num)) {
-      if (num > 24) {
-        // Likely minutes
-        return num / 60;
-      } else {
-        // Likely hours
-        return num;
-      }
-    }
+    return (parseInt(p[0]) || 0) + (parseInt(p[1]) || 0) / 60;
   }
+  const num = parseFloat(cleaned);
+  if (!isNaN(num)) return num > 24 ? num / 60 : num;
   return 0;
+}
+
+export function formatMinutes(minutes: number): string {
+  if (!minutes) return '—';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h}:${m.toString().padStart(2, '0')}`;
+}
+
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export function getMonthFromDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length >= 2) {
+    const idx = parseInt(parts[1], 10) - 1;
+    return MONTHS_SHORT[idx] ?? '';
+  }
+  return '';
 }
 
 export const MONTH_ORDER: string[] = [
@@ -39,7 +46,7 @@ export function getProducts(data: Incident[]): string[] {
 }
 
 export function getMonths(data: Incident[]): string[] {
-  return [...new Set(data.map((d) => d.month))].sort(
+  return [...new Set(data.map((d) => getMonthFromDate(d.date ?? '')).filter(Boolean))].sort(
     (a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b)
   );
 }
