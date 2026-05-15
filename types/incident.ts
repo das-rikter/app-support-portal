@@ -10,14 +10,14 @@ export interface Incident {
   startTime: string;       // HH:MM:SS
   closeDate: string;       // YYYY-MM-DD
   closeTime: string;       // HH:MM:SS
-  outage: number;          // total minutes, start to closure incl. monitoring
+  outage: number;          // computed: closeDateTime - startDateTime in minutes
   resolutionDate: string;  // YYYY-MM-DD
   resolutionTime: string;  // HH:MM:SS
   downtime: number;        // total minutes, start to service restoration
-  alerted: 0 | 1;
+  alerted: boolean;
   alertSrc: string;
   cause: string;
-  dasCaused: 0 | 1;
+  dasCaused: boolean;
 }
 
 export type IncidentView = 'overview' | 'products' | 'process' | 'incidents';

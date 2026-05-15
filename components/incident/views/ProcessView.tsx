@@ -48,7 +48,7 @@ function buildAlertCoverageChart(data: Incident[], allMonths: string[]) {
   allMonths.forEach((m) => {
     const mData = data.filter((d) => getMonthFromDate(d.date) === m);
     alertByMonth[m] = mData.length
-      ? Math.round((mData.filter((d) => d.alerted === 1).length / mData.length) * 100)
+      ? Math.round((mData.filter((d) => d.alerted).length / mData.length) * 100)
       : 0;
   });
   const alertMonths = Object.keys(alertByMonth).sort((a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
@@ -123,12 +123,12 @@ function buildMttrChart(data: Incident[]) {
 
 function kpis(data: Incident[]) {
   const total = data.length;
-  const alertedCount = data.filter((d) => d.alerted === 1).length;
+  const alertedCount = data.filter((d) => d.alerted).length;
   return {
     total,
     alertedCount,
     alertPct: Math.round((alertedCount / Math.max(total, 1)) * 100),
-    dasCausedN: data.filter((d) => d.dasCaused === 1).length,
+    dasCausedN: data.filter((d) => d.dasCaused).length,
   };
 }
 

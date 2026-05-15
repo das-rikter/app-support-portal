@@ -15,6 +15,20 @@
       "when": 1747353600000,
       "tag": "0001_incident_schema_v2",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778877971076,
+      "tag": "0002_broad_doctor_spectrum",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778884241108,
+      "tag": "0003_flimsy_mockingbird",
+      "breakpoints": true
     }
   ]
 }

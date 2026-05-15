@@ -19,7 +19,7 @@ export async function GET() {
   }
 
   log.debug({ user: session.user.email }, "GET /api/users");
-  const rows = await db.select().from(users).orderBy(asc(users.email));
+  const rows = await db.select().from(users).orderBy(asc(users.email)).limit(1000);
   log.debug({ count: rows.length }, "GET /api/users - fetched");
   return NextResponse.json(
     rows.map((u) => ({

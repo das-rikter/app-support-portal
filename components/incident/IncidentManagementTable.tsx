@@ -5,6 +5,7 @@ import { useDeleteIncident, useIncidents } from "@/hooks/useIncidents";
 import { formatMinutes, getProducts, getYears, parseOutageHrs } from "@/lib/incidentUtils";
 import type { Incident } from "@/types/incident";
 import {
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -16,31 +17,24 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-const TH = "px-3 py-2.5 text-[11px] uppercase tracking-[0.08em] text-muted-foreground font-bold text-left border-b border-border whitespace-nowrap select-none bg-secondary";
-const TD = "px-3 py-2.5 border-b border-border text-[13px] align-middle";
+const TH = "px-3 py-2.5 text-[11px] uppercase tracking-[0.08em] text-muted-foreground font-bold text-left border-b border-border whitespace-nowrap select-none bg-secondary" as const;
+const TD = "px-3 py-2.5 border-b border-border text-[13px] align-middle" as const;
 
 const SEV_CLASS: Record<string, string> = {
   P1: "inline-flex px-2 py-0.5 rounded-full text-[11px] font-extrabold tracking-[0.04em] bg-[rgba(220,38,38,0.12)] text-[#dc2626]",
   P2: "inline-flex px-2 py-0.5 rounded-full text-[11px] font-extrabold tracking-[0.04em] bg-[rgba(217,119,6,0.12)] text-[#d97706]",
   P3: "inline-flex px-2 py-0.5 rounded-full text-[11px] font-extrabold tracking-[0.04em] bg-[rgba(59,130,246,0.12)] text-[#3b82f6]",
   P4: "inline-flex px-2 py-0.5 rounded-full text-[11px] font-extrabold tracking-[0.04em] bg-[rgba(22,163,74,0.12)] text-[#16a34a]",
-};
+} as const;
 
-const CHIP: Record<string, string> = {
-  internal: "inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold bg-[rgba(214,106,6,0.10)] text-[#d66a06]",
-  external: "inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold bg-[rgba(59,130,246,0.12)] text-[#3b82f6]",
-  yes: "inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold bg-[rgba(22,163,74,0.12)] text-[#16a34a]",
-  no: "inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold bg-[rgba(107,114,128,0.12)] text-muted-foreground",
-};
 
-const selectCls =
-  "border border-border rounded-lg px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none bg-background text-foreground focus:border-[#d66a06]";
+const selectCls = "border border-border rounded-lg px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none bg-background text-foreground focus:border-[#d66a06]" as const;
 
 type SortCol = "date" | "product" | "severity" | "outage" | "downtime" | "title";
 
-const PAGE_SIZES = [10, 20, 50, 100];
+const PAGE_SIZES = [10, 20, 50, 100] as const;
 
-function SortIcon({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
+const SortIcon = ({ active, dir }: { active: boolean; dir: "asc" | "desc" }) => {
   if (!active) return <ChevronsUpDown size={11} className="text-muted-foreground/50 inline ml-0.5" />;
   return dir === "asc"
     ? <ChevronUp size={11} className="text-[#d66a06] inline ml-0.5" />
@@ -55,19 +49,17 @@ interface SortTHProps {
   onSort: (col: SortCol) => void;
 }
 
-function SortTH({ col, children, activeCol, dir, onSort }: SortTHProps) {
-  return (
-    <th
-      className={TH + " cursor-pointer hover:text-foreground transition-colors"}
-      onClick={() => onSort(col)}
-    >
-      {children}
-      <SortIcon active={activeCol === col} dir={dir} />
-    </th>
-  );
-}
+const SortTH = ({ col, children, activeCol, dir, onSort }: SortTHProps) => (
+  <th
+    className={TH + " cursor-pointer hover:text-foreground transition-colors"}
+    onClick={() => onSort(col)}
+  >
+    {children}
+    <SortIcon active={activeCol === col} dir={dir} />
+  </th>
+);
 
-export function IncidentManagementTable() {
+export const IncidentManagementTable = () => {
   const { data: incidents = [], isLoading, error } = useIncidents();
   const deleteIncident = useDeleteIncident();
 
@@ -85,8 +77,8 @@ export function IncidentManagementTable() {
   const [editingIncident, setEditingIncident] = useState<Incident | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Incident | null>(null);
 
-  const allYears = useMemo(() => getYears(incidents as Incident[]), [incidents]);
-  const allProducts = useMemo(() => getProducts(incidents as Incident[]), [incidents]);
+  const allYears = useMemo(() => getYears(incidents), [incidents]);
+  const allProducts = useMemo(() => getProducts(incidents), [incidents]);
 
   const handleSort = (col: SortCol) => {
     if (sortCol === col) {
@@ -100,7 +92,7 @@ export function IncidentManagementTable() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return (incidents as Incident[]).filter((d) => {
+    return incidents.filter((d) => {
       if (filterYear && !d.date.startsWith(filterYear)) return false;
       if (filterProduct && d.product !== filterProduct) return false;
       if (filterSeverity && d.severity !== filterSeverity) return false;
@@ -214,9 +206,9 @@ export function IncidentManagementTable() {
         </select>
 
         <select value={filterOwnership} onChange={(e) => { setFilterOwnership(e.target.value); setPage(1); }} className={selectCls}>
-          <option value="">All ownership</option>
-          <option value="Internal">Internal (DAS)</option>
-          <option value="External">External</option>
+          <option value="">All DAS caused</option>
+          <option value="Internal">Yes</option>
+          <option value="External">No</option>
         </select>
 
         {hasActiveFilters && (
@@ -245,7 +237,7 @@ export function IncidentManagementTable() {
       </div>
 
       {/* Table */}
-      <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+      <div className="border border-border rounded-md overflow-hidden bg-card shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse min-w-225">
             <thead>
@@ -258,7 +250,7 @@ export function IncidentManagementTable() {
                 <SortTH col="outage" activeCol={sortCol} dir={sortDir} onSort={handleSort}>Outage (HH:MM)</SortTH>
                 <SortTH col="downtime" activeCol={sortCol} dir={sortDir} onSort={handleSort}>Downtime (HH:MM)</SortTH>
                 <th className={TH}>Cause</th>
-                <th className={TH}>Ownership</th>
+                <th className={TH}>DAS Caused</th>
                 <th className={TH}>Alert</th>
                 <th className={TH}></th>
               </tr>
@@ -281,8 +273,8 @@ export function IncidentManagementTable() {
                     <td className={TD + " tabular-nums text-xs font-medium whitespace-nowrap"}>{formatMinutes(d.outage)}</td>
                     <td className={TD + " tabular-nums text-xs font-medium whitespace-nowrap"}>{formatMinutes(d.downtime)}</td>
                     <td className={TD + " text-muted-foreground text-xs max-w-36"}>{d.cause || "-"}</td>
-                    <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.external}>{d.dasCaused ? "Internal" : "External"}</span></td>
-                    <td className={TD}><span className={d.alerted ? CHIP.yes : CHIP.no}>{d.alerted ? "Yes" : "No"}</span></td>
+                    <td className={TD}>{d.dasCaused && <Check size={24} className="text-primary-clementine-900 mx-auto" />}</td>
+                    <td className={TD}>{d.alerted && <Check size={24} className="text-primary-clementine-900 mx-auto" />}</td>
                     <td className={TD}>
                       <div className="flex gap-1">
                         <button

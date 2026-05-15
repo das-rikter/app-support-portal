@@ -1,4 +1,4 @@
-import { boolean, date as pgDate, integer, pgTable, serial, text, time as pgTime, timestamp } from "drizzle-orm/pg-core";
+import { boolean, date as pgDate, index, integer, pgTable, serial, text, time as pgTime, timestamp } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const incidents = pgTable("incidents", {
@@ -13,7 +13,6 @@ export const incidents = pgTable("incidents", {
   startTime: pgTime("start_time").notNull(),
   closeDate: pgDate("close_date").notNull(),
   closeTime: pgTime("close_time").notNull(),
-  outage: integer("outage").notNull().default(0),
   resolutionDate: pgDate("resolution_date").notNull(),
   resolutionTime: pgTime("resolution_time").notNull(),
   downtime: integer("downtime").notNull().default(0),
@@ -23,7 +22,11 @@ export const incidents = pgTable("incidents", {
   dasCaused: boolean("das_caused").notNull().default(false),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
-});
+}, (t) => [
+  index("incidents_date_idx").on(t.date),
+  index("incidents_product_idx").on(t.product),
+  index("incidents_severity_idx").on(t.severity),
+]);
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),

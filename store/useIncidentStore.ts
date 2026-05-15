@@ -41,9 +41,8 @@ function applyFilters(incidents: Incident[], filters: IncidentFilters): Incident
     if (filters.product && d.product !== filters.product) return false;
     if (filters.severity && d.severity !== filters.severity) return false;
     if (filters.ownership) {
-      const internal = d.dasCaused === 1;
-      if (filters.ownership === 'Internal' && !internal) return false;
-      if (filters.ownership === 'External' && internal) return false;
+      if (filters.ownership === 'Internal' && !d.dasCaused) return false;
+      if (filters.ownership === 'External' && d.dasCaused) return false;
     }
     return true;
   });

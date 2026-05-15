@@ -44,7 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               token.role = defaultRole;
             }
           } catch {
-            token.role = defaultRole;
+            token.role = "Viewer";
           }
         }
       }

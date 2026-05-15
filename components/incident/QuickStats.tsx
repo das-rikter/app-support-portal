@@ -10,7 +10,7 @@ export function QuickStats() {
   const total = filtered.length;
   const p1 = filtered.filter((d) => d.severity === 'P1').length;
   const outageHrs = filtered.reduce((s, d) => s + parseOutageHrs(d.downtime), 0);
-  const dasCaused = filtered.filter((d) => d.dasCaused === 1).length;
+  const dasCaused = filtered.filter((d) => d.dasCaused).length;
 
   const stats = [
     { label: 'Total',       value: String(total),             colorClass: 'text-foreground' },

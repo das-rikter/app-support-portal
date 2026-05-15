@@ -57,8 +57,8 @@ function buildOwnershipChart(data: Incident[]) {
   const sorted = [...new Set(data.map((d) => d.product))]
     .map((p) => ({
       name: p,
-      internal: data.filter((d) => d.product === p && d.dasCaused === 1).length,
-      external: data.filter((d) => d.product === p && d.dasCaused === 0).length,
+      internal: data.filter((d) => d.product === p && d.dasCaused).length,
+      external: data.filter((d) => d.product === p && !d.dasCaused).length,
     }))
     .sort((a, b) => (a.internal + a.external) - (b.internal + b.external));
   const prodList = sorted.map((p) => truncateName(p.name));

@@ -188,6 +188,7 @@ function KpiCard({ accent, children }: { accent: 'accent' | 'blue' | 'green' | '
 
 export function OverviewView() {
   const filtered = useIncidentStore((s) => s.filtered);
+  const filters = useIncidentStore((s) => s.filters);
   const singleApp = useMemo(() => filtered.filter((d) => !isMultiApp(d.product)), [filtered]);
   const multiApp = useMemo(() => filtered.filter((d) => isMultiApp(d.product)), [filtered]);
 
@@ -201,24 +202,28 @@ export function OverviewView() {
   const total = singleApp.length;
   const p1Count = singleApp.filter((d) => d.severity === 'P1').length;
   const totalHrs = singleApp.reduce((s, d) => s + parseOutageHrs(d.downtime), 0);
-  const alertPct = Math.round((singleApp.filter((d) => d.alerted === 1).length / Math.max(total, 1)) * 100);
-  const dasCausedPct = Math.round((singleApp.filter((d) => d.dasCaused === 1).length / Math.max(total, 1)) * 100);
+  const alertPct = Math.round((singleApp.filter((d) => d.alerted).length / Math.max(total, 1)) * 100);
+  const dasCausedPct = Math.round((singleApp.filter((d) => d.dasCaused).length / Math.max(total, 1)) * 100);
 
   const maTotal = multiApp.length;
   const maP1Count = multiApp.filter((d) => d.severity === 'P1').length;
   const maTotalHrs = multiApp.reduce((s, d) => s + parseOutageHrs(d.downtime), 0);
-  const maAlertPct = Math.round((multiApp.filter((d) => d.alerted === 1).length / Math.max(maTotal, 1)) * 100);
-  const maDasCausedPct = Math.round((multiApp.filter((d) => d.dasCaused === 1).length / Math.max(maTotal, 1)) * 100);
+  const maAlertPct = Math.round((multiApp.filter((d) => d.alerted).length / Math.max(maTotal, 1)) * 100);
+  const maDasCausedPct = Math.round((multiApp.filter((d) => d.dasCaused).length / Math.max(maTotal, 1)) * 100);
 
-  const monthlyChart = useMemo(() => buildMonthlyChart(filtered), [filtered]);
-  const downtimeChart = useMemo(() => buildDowntimeChart(singleApp), [singleApp]);
-  const productVolChart = useMemo(() => buildProductVolChart(singleApp), [singleApp]);
-  const causesChart = useMemo(() => buildCausesChart(singleApp), [singleApp]);
+  const charts = useMemo(() => ({
+    monthly: buildMonthlyChart(filtered),
+    downtime: buildDowntimeChart(singleApp),
+    productVol: buildProductVolChart(singleApp),
+    causes: buildCausesChart(singleApp),
+  }), [filtered, singleApp]);
 
-  const maMonthlyChart = useMemo(() => buildMonthlyChart(multiApp), [multiApp]);
-  const maDowntimeChart = useMemo(() => buildDowntimeChart(multiApp), [multiApp]);
-  const maProductVolChart = useMemo(() => buildProductVolChart(multiApp), [multiApp]);
-  const maCausesChart = useMemo(() => buildCausesChart(multiApp), [multiApp]);
+  const maCharts = useMemo(() => ({
+    monthly: buildMonthlyChart(multiApp),
+    downtime: buildDowntimeChart(multiApp),
+    productVol: buildProductVolChart(multiApp),
+    causes: buildCausesChart(multiApp),
+  }), [multiApp]);
 
   const tableRows = useMemo(() => {
     const q = search.toLowerCase();
@@ -251,7 +256,7 @@ export function OverviewView() {
           <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">Total Incidents</div>
           <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{total}</div>
           <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-            <span>Jan–Oct 2025</span>
+            <span>{filters.month ? `${filters.month} ${filters.year}`.trim() : (filters.year || 'All time')}</span>
             <span className="font-bold text-[#dc2626]">{p1Count} P1s</span>
           </div>
         </KpiCard>
@@ -302,7 +307,7 @@ export function OverviewView() {
             </div>
             <span className={CARD_BADGE}>Trend</span>
           </div>
-          <PlotlyChart data={monthlyChart.data} layout={monthlyChart.layout} className="h-70" />
+          <PlotlyChart data={charts.monthly.data} layout={charts.monthly.layout} className="h-70" />
         </div>
         <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
           <div className={CARD_HEAD}>
@@ -312,7 +317,7 @@ export function OverviewView() {
             </div>
             <span className={CARD_BADGE}>Downtime</span>
           </div>
-          <PlotlyChart data={downtimeChart.data} layout={downtimeChart.layout} className="h-70" />
+          <PlotlyChart data={charts.downtime.data} layout={charts.downtime.layout} className="h-70" />
         </div>
       </div>
 
@@ -326,7 +331,7 @@ export function OverviewView() {
             </div>
             <span className={CARD_BADGE}>Volume</span>
           </div>
-          <PlotlyChart data={productVolChart.data} layout={productVolChart.layout} className="h-80" />
+          <PlotlyChart data={charts.productVol.data} layout={charts.productVol.layout} className="h-80" />
         </div>
         <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
           <div className={CARD_HEAD}>
@@ -336,7 +341,7 @@ export function OverviewView() {
             </div>
             <span className={CARD_BADGE}>Root Cause</span>
           </div>
-          <PlotlyChart data={causesChart.data} layout={causesChart.layout} className="h-80" />
+          <PlotlyChart data={charts.causes.data} layout={charts.causes.layout} className="h-80" />
         </div>
       </div>
 
@@ -371,7 +376,7 @@ export function OverviewView() {
             </tr></thead>
             <tbody>
               {tableRows.map((d, i) => (
-                <tr key={i} className="hover:bg-secondary/50">
+                <tr key={d.id ?? i} className="hover:bg-secondary/50">
                   <td className={TD + ' tabular-nums text-xs font-medium text-muted-foreground whitespace-nowrap'}>{d.date}</td>
                   <td className={TD + ' font-bold text-[13px]'}>{d.product}</td>
                   <td className={TD + ' text-muted-foreground text-xs'}>{d.function}</td>
@@ -391,7 +396,7 @@ export function OverviewView() {
         </div>
         <div className="flex justify-between px-5 py-2.5 text-xs border-t border-border text-muted-foreground">
           <span>{tableRows.length} incident{tableRows.length !== 1 ? 's' : ''}</span>
-          <span>DAS Incident Log · 2025</span>
+          <span>DAS Incident Log · {filters.year || new Date().getFullYear()}</span>
         </div>
       </div>
 
@@ -461,7 +466,7 @@ export function OverviewView() {
                 </div>
                 <span className={CARD_BADGE}>Trend</span>
               </div>
-              <PlotlyChart data={maMonthlyChart.data} layout={maMonthlyChart.layout} className="h-70" />
+              <PlotlyChart data={maCharts.monthly.data} layout={maCharts.monthly.layout} className="h-70" />
             </div>
             <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
               <div className={CARD_HEAD}>
@@ -471,7 +476,7 @@ export function OverviewView() {
                 </div>
                 <span className={CARD_BADGE}>Downtime</span>
               </div>
-              <PlotlyChart data={maDowntimeChart.data} layout={maDowntimeChart.layout} className="h-70" />
+              <PlotlyChart data={maCharts.downtime.data} layout={maCharts.downtime.layout} className="h-70" />
             </div>
           </div>
 
@@ -484,7 +489,7 @@ export function OverviewView() {
                 </div>
                 <span className={CARD_BADGE}>Volume</span>
               </div>
-              <PlotlyChart data={maProductVolChart.data} layout={maProductVolChart.layout} className="h-80" />
+              <PlotlyChart data={maCharts.productVol.data} layout={maCharts.productVol.layout} className="h-80" />
             </div>
             <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
               <div className={CARD_HEAD}>
@@ -494,7 +499,7 @@ export function OverviewView() {
                 </div>
                 <span className={CARD_BADGE}>Root Cause</span>
               </div>
-              <PlotlyChart data={maCausesChart.data} layout={maCausesChart.layout} className="h-80" />
+              <PlotlyChart data={maCharts.causes.data} layout={maCharts.causes.layout} className="h-80" />
             </div>
           </div>
 
@@ -528,7 +533,7 @@ export function OverviewView() {
                 </tr></thead>
                 <tbody>
                   {maTableRows.map((d, i) => (
-                    <tr key={i} className="hover:bg-secondary/50">
+                    <tr key={d.id ?? i} className="hover:bg-secondary/50">
                       <td className={TD + ' tabular-nums text-xs font-medium text-muted-foreground whitespace-nowrap'}>{d.date}</td>
                       <td className={TD + ' font-bold text-[13px]'}>{d.product}</td>
                       <td className={TD + ' text-muted-foreground text-xs'}>{d.function}</td>
@@ -548,7 +553,7 @@ export function OverviewView() {
             </div>
             <div className="flex justify-between px-5 py-2.5 text-xs border-t border-border text-muted-foreground">
               <span>{maTableRows.length} incident{maTableRows.length !== 1 ? 's' : ''}</span>
-              <span>DAS Incident Log · 2025</span>
+              <span>DAS Incident Log · {filters.year || new Date().getFullYear()}</span>
             </div>
           </div>
         </>

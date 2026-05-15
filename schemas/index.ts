@@ -144,17 +144,30 @@ export const DbIncidentSchema = z.object({
   startTime: z.string(),
   closeDate: z.string(),
   closeTime: z.string(),
-  outage: z.number().int(),
   resolutionDate: z.string(),
   resolutionTime: z.string(),
   downtime: z.number().int(),
-  alerted: z.union([z.literal(0), z.literal(1)]),
+  alerted: z.boolean(),
   alertSrc: z.string(),
   cause: z.string(),
-  dasCaused: z.union([z.literal(0), z.literal(1)]),
+  dasCaused: z.boolean(),
 });
 
 export type DbIncident = z.infer<typeof DbIncidentSchema>;
+
+const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+const timePattern = /^\d{1,2}:\d{2}(:\d{2})?(\s?(AM|PM))?$/i;
+const durationPattern = /^\d+:\d{2}$/;
+
+const optionalDate = z.string().refine((v) => !v || datePattern.test(v), {
+  message: "Must be YYYY-MM-DD or empty",
+}).default("");
+const optionalTime = z.string().refine((v) => !v || timePattern.test(v), {
+  message: "Must be a valid time or empty",
+}).default("");
+const optionalDuration = z.string().refine((v) => !v || durationPattern.test(v), {
+  message: "Must be H:MM format or empty",
+}).default("");
 
 export const IncidentFormSchema = z.object({
   product: z.string().min(1, "Product is required"),
@@ -163,14 +176,13 @@ export const IncidentFormSchema = z.object({
   lead: z.string().default(""),
   severity: z.enum(["P1", "P2", "P3", "P4"]),
   title: z.string().min(1, "Title is required"),
-  date: z.string().min(1, "Date is required"),
-  startTime: z.string().default(""),
-  closeDate: z.string().default(""),
-  closeTime: z.string().default(""),
-  outage: z.string().default(""),
-  resolutionDate: z.string().default(""),
-  resolutionTime: z.string().default(""),
-  downtime: z.string().default(""),
+  date: z.string().regex(datePattern, "Date must be YYYY-MM-DD"),
+  startTime: optionalTime,
+  closeDate: optionalDate,
+  closeTime: optionalTime,
+  resolutionDate: optionalDate,
+  resolutionTime: optionalTime,
+  downtime: optionalDuration,
   alerted: z.boolean().default(false),
   alertSrc: z.string().default(""),
   cause: z.string().default(""),

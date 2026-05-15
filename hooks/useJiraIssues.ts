@@ -3,6 +3,7 @@ import type { JiraIssue, JiraProject, JiraSearchResult } from "@/schemas";
 import { JiraProjectSchema } from "@/schemas";
 import { Bug } from "@/types/bug-report";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { z } from "zod";
 
 export const jiraKeys = {
@@ -37,17 +38,7 @@ const fetchAllPages = async (
   } while (nextPageToken);
 
   return issues;
-}
-
-const fetchProjectLeads = async (): Promise<Map<string, string | undefined>> => {
-  const response = await fetch("/api/jira/projects");
-  if (!response.ok) {
-    const body: { error?: string } = await response.json().catch(() => ({}));
-    throw new Error(body?.error ?? `HTTP ${response.status}`);
-  }
-  const projects = await response.json() as JiraProject[];
-  return new Map(projects.map((p) => [p.key, p.lead?.displayName]));
-}
+};
 
 const mapToBug = (issues: JiraIssue[], leads: Map<string, string | undefined>): Bug[] =>
   issues.map((issue) => ({
@@ -68,43 +59,6 @@ const mapToBug = (issues: JiraIssue[], leads: Map<string, string | undefined>): 
       .join(", ") ?? "",
   }));
 
-const useJiraWeeklyIssues = (filters: JiraWeeklyParams) =>
-  useQuery({
-    queryKey: jiraKeys.weekly(filters),
-    queryFn: async (): Promise<Bug[]> => {
-      const [issues, leads] = await Promise.all([
-        fetchAllPages("/api/jira/weekly", {
-          updatedAfter: filters.updatedAfter,
-          updatedBefore: filters.updatedBefore,
-          statuses: filters.statuses.join(","),
-          ...(filters.maxResults !== undefined ? { maxResults: String(filters.maxResults) } : {}),
-        }),
-        fetchProjectLeads(),
-      ]);
-      return mapToBug(issues, leads);
-    },
-    enabled:
-      !!filters.updatedAfter &&
-      !!filters.updatedBefore &&
-      filters.statuses.length > 0,
-  });
-
-const useJiraHistoricalIssues = (filters: JiraHistoricalParams) =>
-  useQuery({
-    queryKey: jiraKeys.historical(filters),
-    queryFn: async (): Promise<Bug[]> => {
-      const [issues, leads] = await Promise.all([
-        fetchAllPages("/api/jira/historical", {
-          statuses: filters.statuses.join(","),
-          ...(filters.maxResults !== undefined ? { maxResults: String(filters.maxResults) } : {}),
-        }),
-        fetchProjectLeads(),
-      ]);
-      return mapToBug(issues, leads);
-    },
-    enabled: filters.statuses.length > 0,
-  });
-
 const useJiraProjects = () =>
   useQuery({
     queryKey: jiraKeys.projects(),
@@ -117,5 +71,50 @@ const useJiraProjects = () =>
       return z.array(JiraProjectSchema).parse(await response.json());
     },
   });
+
+const useJiraWeeklyIssues = (filters: JiraWeeklyParams) => {
+  const { data: projects = [] } = useJiraProjects();
+  const leads = useMemo(
+    () => new Map(projects.map((p) => [p.key, p.lead?.displayName])),
+    [projects]
+  );
+
+  return useQuery({
+    queryKey: [...jiraKeys.weekly(filters), leads.size] as const,
+    queryFn: async (): Promise<Bug[]> => {
+      const issues = await fetchAllPages("/api/jira/weekly", {
+        updatedAfter: filters.updatedAfter,
+        updatedBefore: filters.updatedBefore,
+        statuses: filters.statuses.join(","),
+        ...(filters.maxResults !== undefined ? { maxResults: String(filters.maxResults) } : {}),
+      });
+      return mapToBug(issues, leads);
+    },
+    enabled:
+      !!filters.updatedAfter &&
+      !!filters.updatedBefore &&
+      filters.statuses.length > 0,
+  });
+};
+
+const useJiraHistoricalIssues = (filters: JiraHistoricalParams) => {
+  const { data: projects = [] } = useJiraProjects();
+  const leads = useMemo(
+    () => new Map(projects.map((p) => [p.key, p.lead?.displayName])),
+    [projects]
+  );
+
+  return useQuery({
+    queryKey: [...jiraKeys.historical(filters), leads.size] as const,
+    queryFn: async (): Promise<Bug[]> => {
+      const issues = await fetchAllPages("/api/jira/historical", {
+        statuses: filters.statuses.join(","),
+        ...(filters.maxResults !== undefined ? { maxResults: String(filters.maxResults) } : {}),
+      });
+      return mapToBug(issues, leads);
+    },
+    enabled: filters.statuses.length > 0,
+  });
+};
 
 export { useJiraHistoricalIssues, useJiraProjects, useJiraWeeklyIssues };

@@ -1,21 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Incident } from "@/types/incident";
 import type { IncidentForm } from "@/schemas";
+import { fetchJson } from "@/lib/fetch-utils";
 
 export const incidentKeys = {
   all: ["incidents"] as const,
   lists: () => [...incidentKeys.all, "list"] as const,
   detail: (id: number) => [...incidentKeys.all, "detail", id] as const,
 };
-
-async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, init);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body?.error ?? `HTTP ${res.status}`);
-  }
-  return res.json() as Promise<T>;
-}
 
 export function useIncidents() {
   return useQuery({

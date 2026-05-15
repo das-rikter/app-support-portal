@@ -17,7 +17,7 @@ export async function GET() {
   }
 
   log.debug({ user: session.user.email }, "GET /api/incidents");
-  const rows = await db.select().from(incidents).orderBy(desc(incidents.date));
+  const rows = await db.select().from(incidents).orderBy(desc(incidents.date)).limit(5000);
   log.debug({ count: rows.length }, "GET /api/incidents - fetched");
   return NextResponse.json(rows.map(rowToIncident));
 }

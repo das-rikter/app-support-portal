@@ -56,7 +56,9 @@
       "Bash(npx tsx *)",
       "Bash(Get-ChildItem -Path \"c:\\\\git\\\\app-support-portal\" -Filter \"csvParser*\" -Recurse)",
       "Bash(Get-ChildItem -Path \"c:\\\\git\\\\app-support-portal\\\\app\" -Recurse -Include \"*.tsx\", \"*.ts\")",
-      "Bash(Find-Item -Path \"c:\\\\git\\\\app-support-portal\\\\db\" -Include \"*.ts\")"
+      "Bash(Find-Item -Path \"c:\\\\git\\\\app-support-portal\\\\db\" -Include \"*.ts\")",
+      "Bash(Remove-Item \"c:/git/app-support-portal/middleware.ts\")",
+      "Bash(npx shadcn@latest add calendar popover --yes)"
     ],
     "additionalDirectories": [
       "c:\\git\\app-support-portal\\app\\api\\incidents"
