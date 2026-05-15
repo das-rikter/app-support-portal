@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from 'react';
-import { useIncidentStore } from '@/store/useIncidentStore';
 import { PlotlyChart } from '@/components/incident/PlotlyChart';
-import { parseOutageHrs, isMultiApp, CHART_COLORS, chartBase } from '@/lib/incidentUtils';
+import { CHART_COLORS, chartBase, formatMinutes, getMonthFromDate, isMultiApp, parseOutageHrs } from '@/lib/incidentUtils';
+import { useIncidentStore } from '@/store/useIncidentStore';
 import type { Incident } from '@/types/incident';
+import { useMemo, useState } from 'react';
 
 const c = CHART_COLORS;
 const CAUSE_COLORS = [c.o, c.o2, c.o3, c.b, c.b2, c.b3, c.g, c.y, c.r, c.p, '#94a3b8', '#64748b'];
@@ -20,8 +20,6 @@ const MONTH_NAMES: Record<string, string> = {
 
 const ALL_12_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-function fmtDowntime(hhmm: string): string { return hhmm || '—'; }
-
 function calcLeftMargin(names: string[]): number {
   if (!names.length) return 50;
   return Math.max(Math.max(...names.map((n) => n.length)) * 8 + 20, 60);
@@ -30,7 +28,8 @@ function calcLeftMargin(names: string[]): number {
 function buildMonthlyChart(data: Incident[]) {
   const byMonth: Record<string, number> = {};
   data.forEach((d) => {
-    const full = MONTH_NAMES[d.month] || d.month;
+    const short = getMonthFromDate(d.date);
+    const full = MONTH_NAMES[short] || short;
     byMonth[full] = (byMonth[full] || 0) + 1;
   });
   const counts = ALL_12_MONTHS.map((m) => byMonth[m] || 0);
@@ -131,7 +130,7 @@ function sortRows(rows: Incident[], col: string, dir: 'asc' | 'desc') {
     let va: number | string | Date, vb: number | string | Date;
     if (col === 'date') { va = new Date(a.date); vb = new Date(b.date); }
     else if (col === 'product') { va = a.product; vb = b.product; }
-    else if (col === 'severity') { va = ['P1', 'P2', 'P3', 'P4'].indexOf(a.sev); vb = ['P1', 'P2', 'P3', 'P4'].indexOf(b.sev); }
+    else if (col === 'severity') { va = ['P1', 'P2', 'P3', 'P4'].indexOf(a.severity); vb = ['P1', 'P2', 'P3', 'P4'].indexOf(b.severity); }
     else { va = parseOutageHrs(a.downtime); vb = parseOutageHrs(b.downtime); }
     if (va < vb) return dir === 'asc' ? -1 : 1;
     if (va > vb) return dir === 'asc' ? 1 : -1;
@@ -161,9 +160,9 @@ const SEV_CLASS: Record<string, string> = {
 const CHIP: Record<string, string> = {
   internal: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(214,106,6,0.10)] text-[#d66a06] dark:bg-[rgba(214,106,6,0.18)]',
   external: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(59,130,246,0.12)] text-[#3b82f6] dark:bg-[rgba(59,130,246,0.18)]',
-  yes:      'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(22,163,74,0.12)] text-[#16a34a] dark:bg-[rgba(22,163,74,0.18)]',
-  no:       'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(107,114,128,0.12)] text-muted-foreground',
-  na:       'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(107,114,128,0.08)] text-muted-foreground',
+  yes: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(22,163,74,0.12)] text-[#16a34a] dark:bg-[rgba(22,163,74,0.18)]',
+  no: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(107,114,128,0.12)] text-muted-foreground',
+  na: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(107,114,128,0.08)] text-muted-foreground',
 };
 
 const CARD_HEAD = 'flex justify-between items-start px-5 pt-[18px] pb-0';
@@ -175,9 +174,9 @@ const controlCls = 'border border-border rounded-lg px-2 py-1.5 text-xs cursor-p
 function KpiCard({ accent, children }: { accent: 'accent' | 'blue' | 'green' | 'warn'; children: React.ReactNode }) {
   const bar: Record<string, string> = {
     accent: 'bg-gradient-to-r from-[#d66a06] to-[#f1a24b]',
-    blue:   'bg-[#3b82f6]',
-    green:  'bg-[#16a34a]',
-    warn:   'bg-[#d97706]',
+    blue: 'bg-[#3b82f6]',
+    green: 'bg-[#16a34a]',
+    warn: 'bg-[#d97706]',
   };
   return (
     <div className="relative overflow-hidden bg-card rounded-2xl border border-border p-5 shadow-xs">
@@ -200,16 +199,16 @@ export function OverviewView() {
   const [maSortDir, setMaSortDir] = useState<'asc' | 'desc'>('desc');
 
   const total = singleApp.length;
-  const p1Count = singleApp.filter((d) => d.sev === 'P1').length;
+  const p1Count = singleApp.filter((d) => d.severity === 'P1').length;
   const totalHrs = singleApp.reduce((s, d) => s + parseOutageHrs(d.downtime), 0);
   const alertPct = Math.round((singleApp.filter((d) => d.alerted === 1).length / Math.max(total, 1)) * 100);
-  const reoccurPct = Math.round((singleApp.filter((d) => d.reoccurring === 1).length / Math.max(total, 1)) * 100);
+  const dasCausedPct = Math.round((singleApp.filter((d) => d.dasCaused === 1).length / Math.max(total, 1)) * 100);
 
   const maTotal = multiApp.length;
-  const maP1Count = multiApp.filter((d) => d.sev === 'P1').length;
+  const maP1Count = multiApp.filter((d) => d.severity === 'P1').length;
   const maTotalHrs = multiApp.reduce((s, d) => s + parseOutageHrs(d.downtime), 0);
   const maAlertPct = Math.round((multiApp.filter((d) => d.alerted === 1).length / Math.max(maTotal, 1)) * 100);
-  const maReoccurPct = Math.round((multiApp.filter((d) => d.reoccurring === 1).length / Math.max(maTotal, 1)) * 100);
+  const maDasCausedPct = Math.round((multiApp.filter((d) => d.dasCaused === 1).length / Math.max(maTotal, 1)) * 100);
 
   const monthlyChart = useMemo(() => buildMonthlyChart(filtered), [filtered]);
   const downtimeChart = useMemo(() => buildDowntimeChart(singleApp), [singleApp]);
@@ -225,7 +224,7 @@ export function OverviewView() {
     const q = search.toLowerCase();
     const rows = singleApp.filter((d) =>
       !q || d.title.toLowerCase().includes(q) || d.product.toLowerCase().includes(q) ||
-      d.fn.toLowerCase().includes(q) || (d.cause || '').toLowerCase().includes(q) || (d.alertSrc || '').toLowerCase().includes(q)
+      d.function.toLowerCase().includes(q) || (d.cause || '').toLowerCase().includes(q) || (d.alertSrc || '').toLowerCase().includes(q)
     );
     return sortRows(rows, sortCol, sortDir);
   }, [singleApp, search, sortCol, sortDir]);
@@ -234,7 +233,7 @@ export function OverviewView() {
     const q = maSearch.toLowerCase();
     const rows = multiApp.filter((d) =>
       !q || d.title.toLowerCase().includes(q) || d.product.toLowerCase().includes(q) ||
-      d.fn.toLowerCase().includes(q) || (d.cause || '').toLowerCase().includes(q) || (d.alertSrc || '').toLowerCase().includes(q)
+      d.function.toLowerCase().includes(q) || (d.cause || '').toLowerCase().includes(q) || (d.alertSrc || '').toLowerCase().includes(q)
     );
     return sortRows(rows, maSortCol, maSortDir);
   }, [multiApp, maSearch, maSortCol, maSortDir]);
@@ -284,13 +283,12 @@ export function OverviewView() {
         <KpiCard accent="warn">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 bg-[rgba(217,119,6,0.12)] dark:bg-[rgba(217,119,6,0.18)]">
             <svg className="w-4 h-4 text-[#d97706]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             </svg>
           </div>
-          <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">Reoccurring Issues</div>
-          <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{reoccurPct}%</div>
-          <div className="mt-2 text-xs text-muted-foreground">Flagged repeat incidents</div>
+          <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">Internal (DAS)</div>
+          <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{dasCausedPct}%</div>
+          <div className="mt-2 text-xs text-muted-foreground">DAS-caused incidents</div>
         </KpiCard>
       </div>
 
@@ -367,7 +365,7 @@ export function OverviewView() {
         <div className="max-h-120 overflow-auto">
           <table className="w-full border-collapse">
             <thead><tr>
-              {['Date','Month','Product','Function','Sev','Incident Title','Outage','Downtime','Root Cause','Ownership','Alert','Alerted Via','Reoccurring','DAS Caused'].map((h) => (
+              {['Date', 'Product', 'Function', 'Sev', 'Incident Title', 'Outage', 'Downtime', 'Root Cause', 'Ownership', 'Alert', 'Alerted Via', 'DAS Caused'].map((h) => (
                 <th key={h} className={TH}>{h}</th>
               ))}
             </tr></thead>
@@ -375,18 +373,16 @@ export function OverviewView() {
               {tableRows.map((d, i) => (
                 <tr key={i} className="hover:bg-secondary/50">
                   <td className={TD + ' tabular-nums text-xs font-medium text-muted-foreground whitespace-nowrap'}>{d.date}</td>
-                  <td className={TD + ' text-xs text-muted-foreground'}>{d.month}</td>
                   <td className={TD + ' font-bold text-[13px]'}>{d.product}</td>
-                  <td className={TD + ' text-muted-foreground text-xs'}>{d.fn}</td>
-                  <td className={TD}><span className={SEV_CLASS[d.sev]}>{d.sev}</span></td>
+                  <td className={TD + ' text-muted-foreground text-xs'}>{d.function}</td>
+                  <td className={TD}><span className={SEV_CLASS[d.severity]}>{d.severity}</span></td>
                   <td className={TD + ' text-[13px] max-w-55'}>{d.title}</td>
-                  <td className={TD + ' tabular-nums text-xs font-medium'}>{d.incidentLength || '—'}</td>
-                  <td className={TD + ' tabular-nums text-xs font-medium text-[#3b82f6]'}>{fmtDowntime(d.downtime)}</td>
-                  <td className={TD + ' text-muted-foreground text-xs'}>{d.cause || '—'}</td>
+                  <td className={TD + ' tabular-nums text-xs font-medium'}>{formatMinutes(d.outage)}</td>
+                  <td className={TD + ' tabular-nums text-xs font-medium text-[#3b82f6]'}>{formatMinutes(d.downtime)}</td>
+                  <td className={TD + ' text-muted-foreground text-xs'}>{d.cause || '-'}</td>
                   <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.external}>{d.dasCaused ? 'Internal' : 'External'}</span></td>
                   <td className={TD}><span className={d.alerted ? CHIP.yes : CHIP.no}>{d.alerted ? 'Yes' : 'No'}</span></td>
-                  <td className={TD + ' text-muted-foreground text-xs'}>{d.alertSrc || '—'}</td>
-                  <td className={TD}><span className={d.reoccurring ? CHIP.yes : CHIP.no}>{d.reoccurring ? 'Yes' : 'No'}</span></td>
+                  <td className={TD + ' text-muted-foreground text-xs'}>{d.alertSrc || '-'}</td>
                   <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.no}>{d.dasCaused ? 'Yes' : 'No'}</span></td>
                 </tr>
               ))}
@@ -450,9 +446,9 @@ export function OverviewView() {
                   <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
               </div>
-              <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">Reoccurring Issues</div>
-              <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{maReoccurPct}%</div>
-              <div className="mt-2 text-xs text-muted-foreground">Flagged repeat incidents</div>
+              <div className="text-xs font-bold uppercase tracking-wide mb-1 text-muted-foreground">Internal (DAS)</div>
+              <div className="text-4xl font-bold tabular-nums leading-none text-foreground">{maDasCausedPct}%</div>
+              <div className="mt-2 text-xs text-muted-foreground">DAS-caused incidents</div>
             </KpiCard>
           </div>
 
@@ -526,7 +522,7 @@ export function OverviewView() {
             <div className="max-h-120 overflow-auto">
               <table className="w-full border-collapse">
                 <thead><tr>
-                  {['Date','Month','Products Affected','Function','Sev','Incident Title','Outage','Downtime','Root Cause','Ownership','Alert','Alerted Via','Reoccurring','DAS Caused'].map((h) => (
+                  {['Date', 'Products Affected', 'Function', 'Sev', 'Incident Title', 'Outage', 'Downtime', 'Root Cause', 'Ownership', 'Alert', 'Alerted Via', 'DAS Caused'].map((h) => (
                     <th key={h} className={TH}>{h}</th>
                   ))}
                 </tr></thead>
@@ -534,20 +530,18 @@ export function OverviewView() {
                   {maTableRows.map((d, i) => (
                     <tr key={i} className="hover:bg-secondary/50">
                       <td className={TD + ' tabular-nums text-xs font-medium text-muted-foreground whitespace-nowrap'}>{d.date}</td>
-                      <td className={TD + ' text-xs text-muted-foreground'}>{d.month}</td>
                       <td className={TD + ' font-bold text-[13px]'}>{d.product}</td>
-                      <td className={TD + ' text-muted-foreground text-xs'}>{d.fn}</td>
-                      <td className={TD}><span className={SEV_CLASS[d.sev]}>{d.sev}</span></td>
+                      <td className={TD + ' text-muted-foreground text-xs'}>{d.function}</td>
+                      <td className={TD}><span className={SEV_CLASS[d.severity]}>{d.severity}</span></td>
                       <td className={TD + ' text-[13px] max-w-55'}>{d.title}</td>
-                      <td className={TD + ' tabular-nums text-xs font-medium'}>{d.incidentLength || '—'}</td>
-                      <td className={TD + ' tabular-nums text-xs font-medium text-[#3b82f6]'}>{fmtDowntime(d.downtime)}</td>
-                      <td className={TD + ' text-muted-foreground text-xs'}>{d.cause || '—'}</td>
+                      <td className={TD + ' tabular-nums text-xs font-medium'}>{formatMinutes(d.outage)}</td>
+                      <td className={TD + ' tabular-nums text-xs font-medium text-[#3b82f6]'}>{formatMinutes(d.downtime)}</td>
+                      <td className={TD + ' text-muted-foreground text-xs'}>{d.cause || '-'}</td>
                       <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.external}>{d.dasCaused ? 'Internal' : 'External'}</span></td>
                       <td className={TD}><span className={d.alerted ? CHIP.yes : CHIP.no}>{d.alerted ? 'Yes' : 'No'}</span></td>
-                      <td className={TD + ' text-muted-foreground text-xs'}>{d.alertSrc || '—'}</td>
-                      <td className={TD}><span className={d.reoccurring ? CHIP.yes : CHIP.no}>{d.reoccurring ? 'Yes' : 'No'}</span></td>
+                      <td className={TD + ' text-muted-foreground text-xs'}>{d.alertSrc || '-'}</td>
                       <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.no}>{d.dasCaused ? 'Yes' : 'No'}</span></td>
-                        </tr>
+                    </tr>
                   ))}
                 </tbody>
               </table>

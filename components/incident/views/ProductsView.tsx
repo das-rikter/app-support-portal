@@ -94,7 +94,7 @@ function buildSummaryData(data: Incident[]) {
   const sevByProd: Record<string, { P1: number; P2: number; P3: number; P4: number }> = {};
   data.forEach((d) => {
     if (!sevByProd[d.product]) sevByProd[d.product] = { P1: 0, P2: 0, P3: 0, P4: 0 };
-    sevByProd[d.product][d.sev]++;
+    sevByProd[d.product][d.severity]++;
   });
   const maxP1 = Math.max(...Object.values(sevByProd).map((x) => x.P1 || 0), 1);
   const p1List = Object.entries(sevByProd).sort((a, b) => (b[1].P1 || 0) - (a[1].P1 || 0));
