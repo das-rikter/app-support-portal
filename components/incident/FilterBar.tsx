@@ -3,17 +3,11 @@
 import { getMonths, getProducts, getYears } from "@/lib/incidentUtils";
 import { useIncidentStore } from "@/store/useIncidentStore";
 import type { Incident } from "@/types/incident";
-import { Plus } from "lucide-react";
 
 const selectClass =
   "border border-sidebar-border rounded-md px-3 py-1.5 text-sm bg-background text-foreground focus:outline-none focus:border-[#d66a06] cursor-pointer";
 
-interface FilterBarProps {
-  role?: string;
-  onAddIncident?: () => void;
-}
-
-export function FilterBar({ role, onAddIncident }: FilterBarProps) {
+export function FilterBar() {
   const filters = useIncidentStore((s) => s.filters);
   const filtered = useIncidentStore((s) => s.filtered);
   const incidents = useIncidentStore((s) => s.incidents) as Incident[];
@@ -117,15 +111,6 @@ export function FilterBar({ role, onAddIncident }: FilterBarProps) {
         )}
       </div>
 
-      {role === "Admin" && onAddIncident && (
-        <button
-          onClick={onAddIncident}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#d66a06] text-white text-sm font-semibold hover:bg-[#b85505] transition-colors"
-        >
-          <Plus size={16} />
-          Add Incident
-        </button>
-      )}
     </div>
   );
 }

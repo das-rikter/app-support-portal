@@ -1,10 +1,18 @@
 "use client";
 
-import type { DayStatus } from "@/lib/monitorGroups";
-import { GROUPED_MONITOR_NAMES, MONITOR_GROUPS, normalizeMonitorName } from "@/lib/monitorGroups";
+import type { DayStatus, MonitorGroup } from "@/lib/monitorGroups";
+import { GROUPED_MONITOR_NAMES, MONITOR_GROUPS, getMonitorDisplayName, normalizeMonitorName } from "@/lib/monitorGroups";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, RefreshCw, XCircle } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 interface Monitor {
   id: string;
@@ -16,142 +24,162 @@ interface Monitor {
 }
 
 type HistoryMap = Record<string, DayStatus[]>;
+type DayStatusAgg = "up" | "degraded" | "down" | "maintenance" | "unknown";
 
-const statusInfo = (status: string) => {
+const COLS = 7;
+
+function computeGroupDayStatus(
+  group: MonitorGroup,
+  history: HistoryMap | undefined,
+  date: string
+): DayStatusAgg {
+  if (!history) return "unknown";
+  const statuses = group.monitors
+    .map((entry) => history[normalizeMonitorName(entry.betterStackName)]?.find((d) => d.date === date)?.status)
+    .filter((s): s is "up" | "down" | "maintenance" => s !== undefined);
+  if (statuses.length === 0) return "unknown";
+  if (statuses.some((s) => s === "down"))
+    return statuses.some((s) => s === "up") ? "degraded" : "down";
+  if (statuses.some((s) => s === "maintenance")) return "maintenance";
+  return "up";
+}
+
+function DayIcon({ status, size = 18 }: { status: DayStatusAgg; size?: number }) {
   switch (status) {
     case "up":
-      return { label: "Online", color: "text-[#16a34a]", bg: "bg-[rgba(22,163,74,0.12)] dark:bg-[rgba(22,163,74,0.18)]", dot: "bg-[#16a34a]" };
+      return <CheckCircle2 size={size} className="text-[#16a34a] mx-auto" />;
     case "down":
-      return { label: "Offline", color: "text-[#dc2626]", bg: "bg-[rgba(220,38,38,0.12)] dark:bg-[rgba(220,38,38,0.18)]", dot: "bg-[#dc2626]" };
+      return <XCircle size={size} className="text-[#dc2626] mx-auto" />;
+    case "degraded":
+      return <AlertTriangle size={size} className="text-[#d97706] mx-auto" />;
     case "maintenance":
-      return { label: "Maintenance", color: "text-[#d97706]", bg: "bg-[rgba(217,119,6,0.12)] dark:bg-[rgba(217,119,6,0.18)]", dot: "bg-[#d97706]" };
-    case "paused":
-      return { label: "Paused", color: "text-muted-foreground", bg: "bg-[rgba(107,114,128,0.12)]", dot: "bg-muted-foreground" };
+      return (
+        <div
+          className="rounded-full bg-[#3b82f6] flex items-center justify-center mx-auto"
+          style={{ width: size, height: size }}
+        >
+          <span className="text-white font-bold leading-none" style={{ fontSize: Math.round(size * 0.55) }}>
+            i
+          </span>
+        </div>
+      );
     default:
-      return { label: "Checking…", color: "text-muted-foreground", bg: "bg-[rgba(107,114,128,0.08)]", dot: "bg-muted-foreground animate-pulse" };
+      return <span className="text-muted-foreground/30 text-sm block text-center">–</span>;
   }
-};
-
-function HistoryBars({ history }: { history?: DayStatus[] }) {
-  if (!history) {
-    return (
-      <div className="hidden sm:flex items-end gap-px">
-        {Array.from({ length: 45 }).map((_, i) => (
-          <span key={i} className="inline-block h-4 w-0.75 rounded-sm bg-muted animate-pulse" />
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="hidden sm:flex items-end gap-px" title="45-day uptime history (oldest → newest)">
-      {history.map((day) => (
-        <span
-          key={day.date}
-          title={`${new Date(day.date).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}: ${day.status}`}
-          className={`inline-block h-4 w-0.75 rounded-sm ${day.status === "up"
-            ? "bg-[#16a34a]"
-            : day.status === "down"
-              ? "bg-[#dc2626]"
-              : day.status === "maintenance"
-                ? "bg-[#d97706]"
-                : "bg-muted"
-            }`}
-        />
-      ))}
-    </div>
-  );
 }
 
-function MonitorRow({ monitor, history }: { monitor: Monitor; history?: DayStatus[] }) {
-  const info = statusInfo(monitor.status);
-  return (
-    <div className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-secondary/50 transition-colors group gap-3">
-      <div className="flex items-center gap-2.5 min-w-0">
-        <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${info.dot}`} />
-        <span className="text-sm text-foreground truncate">{monitor.name}</span>
-        {monitor.url && (
-          <a
-            href={monitor.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-          >
-            <ExternalLink size={11} />
-          </a>
-        )}
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <HistoryBars history={history} />
-        <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${info.color} ${info.bg}`}>
-          {info.label}
-        </span>
-      </div>
-    </div>
-  );
+function formatDateLabel(date: string): string {
+  return new Date(date + "T12:00:00Z").toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
 }
 
-function GroupCard({ group, monitors, history }: {
-  group: { name: string; monitors: string[] };
+function formatElapsed(seconds: number): string {
+  if (seconds < 0) seconds = 0;
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  const parts: string[] = [];
+  if (d > 0) parts.push(`${d} day${d !== 1 ? "s" : ""}`);
+  if (h > 0 || d > 0) parts.push(`${h} hour${h !== 1 ? "s" : ""}`);
+  if (m > 0 || h > 0 || d > 0) parts.push(`${m} minute${m !== 1 ? "s" : ""}`);
+  parts.push(`${s} second${s !== 1 ? "s" : ""}`);
+  if (parts.length === 1) return parts[0];
+  return parts.slice(0, -1).join(", ") + ", and " + parts[parts.length - 1];
+}
+
+function GroupStatusRows({
+  group,
+  monitors,
+  history,
+  visibleDates,
+  defaultExpanded,
+}: {
+  group: MonitorGroup;
   monitors: Monitor[];
   history: HistoryMap | undefined;
+  visibleDates: string[];
+  defaultExpanded: boolean;
 }) {
-  const byName = new Map(monitors.map((m) => [normalizeMonitorName(m.name), m]));
-  const groupMonitors = group.monitors.map(
-    (name) =>
-      byName.get(normalizeMonitorName(name)) ?? {
-        id: name,
-        name,
-        url: "",
-        status: "pending",
-        lastCheckedAt: null,
-        availability: "",
-      }
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const byName = useMemo(
+    () => new Map(monitors.map((m) => [normalizeMonitorName(m.name), m])),
+    [monitors]
   );
 
-  const active = groupMonitors.filter((m) => m.status !== "paused");
-  const anyDown = active.some((m) => m.status === "down");
-  const anyMaint = active.some((m) => m.status === "maintenance");
-  const allUp = active.length > 0 && active.every((m) => m.status === "up");
-  const groupStatus = anyDown ? "down" : anyMaint ? "maintenance" : allUp ? "up" : "pending";
-  const info = statusInfo(groupStatus);
-
-  const [isOpen, setIsOpen] = useState(!allUp);
-
   return (
-    <div className="border border-border rounded-2xl bg-card shadow-xs overflow-hidden">
-      <button
-        onClick={() => setIsOpen((o) => !o)}
-        className={`w-full flex items-center justify-between px-4 py-3 bg-secondary/50 hover:bg-secondary/70 transition-colors${isOpen ? " border-b border-border" : ""}`}
+    <>
+      <tr
+        className="bg-card hover:bg-secondary/40 cursor-pointer transition-colors border-b border-border"
+        onClick={() => setExpanded((e) => !e)}
       >
-        <h3 className="text-sm font-semibold text-foreground">{group.name}</h3>
-        <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${info.color} ${info.bg}`}>
-            {allUp && <CheckCircle2 size={11} />}
-            {anyDown && <XCircle size={11} />}
-            {!allUp && !anyDown && <AlertTriangle size={11} />}
-            {info.label}
-          </span>
-          <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-200${isOpen ? " rotate-180" : ""}`} />
-        </div>
-      </button>
-      {isOpen && (
-        <div className="px-1 py-1">
-          {groupMonitors.map((m) => (
-            <MonitorRow
-              key={`${group.name}-${m.name}`}
-              monitor={m}
-              history={history?.[normalizeMonitorName(m.name)]}
+        <td className="sticky left-0 z-1 bg-inherit px-4 py-3 min-w-60">
+          <div className="flex items-center gap-2">
+            <ChevronRight
+              size={13}
+              className={`text-muted-foreground shrink-0 transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
             />
-          ))}
-        </div>
-      )}
-    </div>
+            <span className="text-sm font-semibold text-foreground leading-snug">{group.name}</span>
+          </div>
+        </td>
+        <td className="w-9" />
+        {visibleDates.map((date) => (
+          <td key={date} className="w-18 text-center px-1 py-3">
+            <DayIcon status={computeGroupDayStatus(group, history, date)} />
+          </td>
+        ))}
+        <td className="w-9" />
+      </tr>
+
+      {expanded &&
+        group.monitors.map((entry) => {
+          const monitor = byName.get(normalizeMonitorName(entry.betterStackName));
+          return (
+            <tr key={entry.betterStackName} className="bg-secondary/20 border-b border-border/50">
+              <td className="sticky left-0 z-1 bg-secondary/20 px-4 py-2">
+                <div className="flex items-center gap-1.5 pl-7">
+                  <span className="text-xs text-muted-foreground">{getMonitorDisplayName(entry)}</span>
+                  {monitor?.url && (
+                    <a
+                      href={monitor.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-muted-foreground/40 hover:text-muted-foreground"
+                    >
+                      <ExternalLink size={10} />
+                    </a>
+                  )}
+                </div>
+              </td>
+              <td className="w-9" />
+              {visibleDates.map((date) => {
+                const monHistory = history?.[normalizeMonitorName(entry.betterStackName)];
+                const dayStatus = (monHistory?.find((d) => d.date === date)?.status ?? "unknown") as DayStatusAgg;
+                return (
+                  <td key={date} className="w-18 text-center px-1 py-2">
+                    <DayIcon status={dayStatus} size={15} />
+                  </td>
+                );
+              })}
+              <td className="w-9" />
+            </tr>
+          );
+        })}
+    </>
   );
 }
 
 export default function StatusPage() {
-  const { data: monitors, isLoading, error, refetch, dataUpdatedAt } = useQuery({
+  const {
+    data: monitors,
+    isLoading,
+    error,
+    refetch,
+    dataUpdatedAt,
+  } = useQuery({
     queryKey: ["betterstack-monitors"],
     queryFn: async (): Promise<Monitor[]> => {
       const res = await fetch("/api/betterstack/monitors");
@@ -166,10 +194,11 @@ export default function StatusPage() {
   });
 
   const today = new Date().toISOString().slice(0, 10);
+
   const { data: history } = useQuery({
     queryKey: ["betterstack-history", today],
     queryFn: async (): Promise<HistoryMap> => {
-      const res = await fetch("/api/betterstack/history");
+      const res = await fetch("/api/betterstack/history", { cache: "no-cache" });
       if (!res.ok) return {};
       return res.json();
     },
@@ -191,110 +220,278 @@ export default function StatusPage() {
     [activeMonitors]
   );
   const anyDown = useMemo(() => activeMonitors?.some((m) => m.status === "down"), [activeMonitors]);
-  const lastUpdated = useMemo(() => (dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : null), [dataUpdatedAt]);
+  const anyMaint = useMemo(
+    () => !anyDown && activeMonitors?.some((m) => m.status === "maintenance"),
+    [activeMonitors, anyDown]
+  );
+  const lastUpdated = useMemo(
+    () => (dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : null),
+    [dataUpdatedAt]
+  );
+
+  // ── Date navigation ──
+  const [dateOffset, setDateOffset] = useState(0);
+
+  const allHistoryDates = useMemo(() => {
+    const dates = new Set<string>();
+    dates.add(today);
+    if (history) {
+      Object.values(history).forEach((days) => days.forEach((d) => dates.add(d.date)));
+    }
+    return [...dates].sort().reverse(); // newest first (index 0 = today)
+  }, [history, today]);
+
+  const visibleDates = useMemo(
+    () => allHistoryDates.slice(dateOffset, dateOffset + COLS).reverse(), // oldest left → newest right
+    [allHistoryDates, dateOffset]
+  );
+
+  const canGoPrev = dateOffset + COLS < allHistoryDates.length; // go to older dates
+  const canGoNext = dateOffset > 0; // go to newer dates
+
+  // ── Status duration timer ──
+  const statusSince = useMemo(() => {
+    if (!history || !allUp) return new Date();
+    const histDates = [
+      ...new Set(Object.values(history).flatMap((days) => days.map((d) => d.date))),
+    ].sort().reverse();
+
+    let lastBadDate: string | null = null;
+    for (const date of histDates) {
+      const anyBad = Object.values(history).some((days) => {
+        const d = days.find((x) => x.date === date);
+        return d && d.status !== "up";
+      });
+      if (anyBad) { lastBadDate = date; break; }
+    }
+
+    if (!lastBadDate) {
+      const oldest = histDates[histDates.length - 1];
+      return oldest ? new Date(oldest + "T00:00:00Z") : new Date();
+    }
+    const since = new Date(lastBadDate + "T00:00:00Z");
+    since.setDate(since.getDate() + 1);
+    return since;
+  }, [history, allUp]);
+
+  const [elapsedSecs, setElapsedSecs] = useState(0);
+  useEffect(() => {
+    const update = () =>
+      setElapsedSecs(Math.max(0, Math.floor((Date.now() - statusSince.getTime()) / 1000)));
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [statusSince]);
+
+  // ── Default expanded state per group (expand if any monitor is down/maintenance) ──
+  const groupDefaultExpanded = useMemo(() => {
+    const map = new Map<string, boolean>();
+    for (const group of MONITOR_GROUPS) {
+      if (!monitors) { map.set(group.name, false); continue; }
+      const groupMonitors = group.monitors
+        .map((entry) =>
+          monitors.find((m) => normalizeMonitorName(m.name) === normalizeMonitorName(entry.betterStackName))
+        )
+        .filter((m): m is Monitor => !!m && m.status !== "paused");
+      map.set(
+        group.name,
+        groupMonitors.some((m) => m.status === "down" || m.status === "maintenance")
+      );
+    }
+    return map;
+  }, [monitors]);
+
+  const navBtnCls =
+    "h-full w-full flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-25 disabled:cursor-default transition-colors py-3 px-2";
+  const actionBtnCls =
+    "flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary/70 transition-colors disabled:opacity-50";
 
   return (
-    <div className="space-y-6 pt-6 pb-10">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          {isLoading ? (
-            <div className="h-9 w-9 rounded-full bg-secondary animate-pulse" />
-          ) : anyDown ? (
-            <div className="h-9 w-9 rounded-full flex items-center justify-center bg-[rgba(220,38,38,0.12)]">
-              <XCircle size={20} className="text-[#dc2626]" />
-            </div>
-          ) : (
-            <div className="h-9 w-9 rounded-full flex items-center justify-center bg-[rgba(22,163,74,0.12)]">
-              <CheckCircle2 size={20} className="text-[#16a34a]" />
-            </div>
-          )}
-          <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">
-              {isLoading
-                ? "Checking status…"
-                : anyDown
-                  ? "Service Disruption Detected"
-                  : allUp
-                    ? "All Systems Online"
-                    : "Status Overview"}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Real-time status for DAS Technology services
-            </p>
+    <div className="space-y-4 pt-6 pb-10">
+      {/* ── Current Status Card ── */}
+      <div className="border border-border rounded-2xl bg-card shadow-xs overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+          <h2 className="text-sm font-bold text-foreground">Current Status</h2>
+          <div className="flex items-center gap-2">
+            {lastUpdated && (
+              <span className="text-xs text-muted-foreground hidden sm:block">
+                Updated {lastUpdated}
+              </span>
+            )}
+            <button onClick={() => refetch()} disabled={isLoading} className={actionBtnCls}>
+              <RefreshCw size={11} className={isLoading ? "animate-spin" : ""} />
+              Refresh
+            </button>
+            <a
+              href="https://status.digitalairstrike.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={actionBtnCls}
+            >
+              <ExternalLink size={11} />
+              Public Status
+            </a>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0 mt-1">
-          {lastUpdated && (
-            <span className="text-xs text-muted-foreground hidden sm:block">Updated {lastUpdated}</span>
+        <div className="px-5 py-5">
+          <div className="flex items-start gap-3">
+            {isLoading ? (
+              <div className="h-7 w-7 rounded-full bg-secondary animate-pulse shrink-0 mt-0.5" />
+            ) : anyDown ? (
+              <XCircle size={26} className="text-[#dc2626] shrink-0 mt-0.5" />
+            ) : anyMaint ? (
+              <div className="h-6.5 w-6.5 rounded-full bg-[#3b82f6] flex items-center justify-center shrink-0 mt-0.5">
+                <span className="text-white font-bold text-sm leading-none">i</span>
+              </div>
+            ) : allUp ? (
+              <CheckCircle2 size={26} className="text-[#16a34a] shrink-0 mt-0.5" />
+            ) : (
+              <div className="h-6.5 w-6.5 rounded-full bg-secondary animate-pulse shrink-0 mt-0.5" />
+            )}
+            <div>
+              <p className="text-xl font-bold text-foreground leading-tight">
+                {isLoading
+                  ? "Checking status…"
+                  : anyDown
+                    ? "Disruption Detected"
+                    : anyMaint
+                      ? "Maintenance in Progress"
+                      : allUp
+                        ? "Normal"
+                        : "Status Overview"}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {!isLoading && allUp && elapsedSecs > 0
+                  ? `Current status in effect for ${formatElapsed(elapsedSecs)}.`
+                  : !isLoading && anyDown
+                    ? "One or more services are currently experiencing issues."
+                    : !isLoading && anyMaint
+                      ? "Scheduled maintenance is currently in progress."
+                      : !isLoading
+                        ? "Real-time status for DAS Technology services."
+                        : "Fetching live status from monitoring systems…"}
+              </p>
+            </div>
+          </div>
+
+          {groupedMonitors && groupedMonitors.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-4 pt-4 border-t border-border text-sm">
+              {(
+                [
+                  { label: "Online", status: "up", color: "text-[#16a34a]" },
+                  { label: "Offline", status: "down", color: "text-[#dc2626]" },
+                  { label: "Maintenance", status: "maintenance", color: "text-[#d97706]" },
+                  { label: "Paused", status: "paused", color: "text-muted-foreground" },
+                ] as const
+              ).map(({ label, status, color }) => {
+                const count = groupedMonitors.filter((m) => m.status === status).length;
+                return (
+                  <div key={status} className="flex items-center gap-1.5">
+                    <span className={`font-bold tabular-nums ${color}`}>{count}</span>
+                    <span className="text-muted-foreground">{label}</span>
+                  </div>
+                );
+              })}
+              <div className="flex items-center gap-1.5 ml-auto">
+                <span className="font-bold tabular-nums text-foreground">{groupedMonitors.length}</span>
+                <span className="text-muted-foreground">monitors</span>
+              </div>
+            </div>
           )}
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/70 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} />
-            Refresh
-          </button>
-          <a
-            href="https://status.digitalairstrike.io"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/70 transition-colors"
-          >
-            <ExternalLink size={12} />
-            Public Status
-          </a>
         </div>
       </div>
 
-      {/* Error */}
+      {/* ── Error ── */}
       {error && (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-5 py-4 text-sm text-destructive">
           {error instanceof Error ? error.message : "Failed to load monitor status"}
         </div>
       )}
 
-      {/* Summary bar */}
-      {groupedMonitors && (
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          {[
-            { label: "Online", status: "up", color: "text-[#16a34a]" },
-            { label: "Offline", status: "down", color: "text-[#dc2626]" },
-            { label: "Maintenance", status: "maintenance", color: "text-[#d97706]" },
-            { label: "Paused", status: "paused", color: "text-muted-foreground" },
-          ].map(({ label, status, color }) => {
-            const count = groupedMonitors.filter((m) => m.status === status).length;
-            if (count === 0) return null;
-            return (
-              <div key={status} className="flex items-center gap-1.5">
-                <span className={`font-bold tabular-nums ${color}`}>{count}</span>
-                <span className="text-muted-foreground">{label}</span>
-              </div>
-            );
-          })}
-          <div className="flex items-center gap-1.5 ml-auto">
-            <span className="font-bold tabular-nums text-foreground">{groupedMonitors.length}</span>
-            <span className="text-muted-foreground">total monitors</span>
-          </div>
+      {/* ── Status Grid Card ── */}
+      <div className="border border-border rounded-2xl bg-card shadow-xs overflow-hidden">
+        <div className="px-5 py-3 border-b border-border">
+          <h2 className="text-sm font-bold text-foreground">Status Grid</h2>
         </div>
-      )}
 
-      {/* Groups grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="border border-border rounded-2xl bg-card h-40 animate-pulse" />
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-secondary/40 border-b border-border">
+                <th className="sticky left-0 z-2 bg-secondary/40 text-left px-4 py-3 text-xs font-bold uppercase tracking-wide text-muted-foreground min-w-60 whitespace-nowrap">
+                  Product
+                </th>
+                {/* Prev (older) */}
+                <th className="w-9 p-0">
+                  <button
+                    onClick={() => setDateOffset((o) => Math.min(allHistoryDates.length - COLS, o + COLS))}
+                    disabled={!canGoPrev}
+                    className={navBtnCls}
+                    title="Older dates"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                </th>
+                {/* Date headers */}
+                {visibleDates.length > 0
+                  ? visibleDates.map((date) => (
+                    <th
+                      key={date}
+                      className={`w-18 text-center px-1 py-3 text-xs font-semibold whitespace-nowrap ${date === today ? "text-[#d66a06]" : "text-foreground"
+                        }`}
+                    >
+                      {date === today ? "Today" : formatDateLabel(date)}
+                    </th>
+                  ))
+                  : Array.from({ length: COLS }).map((_, i) => (
+                    <th key={i} className="w-18 text-center px-1 py-3">
+                      <div className="h-3 w-10 bg-secondary animate-pulse rounded mx-auto" />
+                    </th>
+                  ))}
+                {/* Next (newer) */}
+                <th className="w-9 p-0">
+                  <button
+                    onClick={() => setDateOffset((o) => Math.max(0, o - COLS))}
+                    disabled={!canGoNext}
+                    className={navBtnCls}
+                    title="Newer dates"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading
+                ? Array.from({ length: MONITOR_GROUPS.length }).map((_, i) => (
+                  <tr key={i} className="bg-card border-b border-border">
+                    <td className="sticky left-0 bg-inherit px-4 py-3">
+                      <div className="h-4 w-44 bg-secondary animate-pulse rounded" />
+                    </td>
+                    <td />
+                    {Array.from({ length: COLS }).map((_, j) => (
+                      <td key={j} className="text-center px-1 py-3">
+                        <div className="h-4.5 w-4.5 bg-secondary animate-pulse rounded-full mx-auto" />
+                      </td>
+                    ))}
+                    <td />
+                  </tr>
+                ))
+                : MONITOR_GROUPS.map((group) => (
+                  <GroupStatusRows
+                    key={group.name}
+                    group={group}
+                    monitors={monitors ?? []}
+                    history={history}
+                    visibleDates={visibleDates}
+                    defaultExpanded={groupDefaultExpanded.get(group.name) ?? false}
+                  />
+                ))}
+            </tbody>
+          </table>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {MONITOR_GROUPS.map((group) => (
-            <GroupCard key={group.name} group={group} monitors={monitors ?? []} history={history} />
-          ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 }

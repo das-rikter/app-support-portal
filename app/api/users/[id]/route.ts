@@ -1,10 +1,10 @@
-import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { auth } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { eq } from "drizzle-orm";
-import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const log = logger.child({ route: "users/[id]" });
 
@@ -18,18 +18,18 @@ export async function PUT(
 ) {
   const session = await auth();
   if (!session?.user) {
-    log.warn("PUT /api/users/[id] — unauthorized");
+    log.warn("PUT /api/users/[id] - unauthorized");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (session.user.role !== "Admin") {
-    log.warn({ user: session.user.email }, "PUT /api/users/[id] — forbidden");
+    log.warn({ user: session.user.email }, "PUT /api/users/[id] - forbidden");
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
   const idNum = Number(id);
   if (!Number.isInteger(idNum) || idNum < 1) {
-    log.warn({ id }, "PUT /api/users/[id] — invalid id");
+    log.warn({ id }, "PUT /api/users/[id] - invalid id");
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
 
@@ -37,13 +37,13 @@ export async function PUT(
   try {
     body = await request.json();
   } catch {
-    log.warn({ id: idNum }, "PUT /api/users/[id] — invalid JSON body");
+    log.warn({ id: idNum }, "PUT /api/users/[id] - invalid JSON body");
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   const parsed = UpdateRoleSchema.safeParse(body);
   if (!parsed.success) {
-    log.warn({ id: idNum }, "PUT /api/users/[id] — invalid role");
+    log.warn({ id: idNum }, "PUT /api/users/[id] - invalid role");
     return NextResponse.json({ error: "role must be Admin or Viewer" }, { status: 422 });
   }
 
@@ -54,7 +54,7 @@ export async function PUT(
     .returning();
 
   if (!row) {
-    log.warn({ id: idNum }, "PUT /api/users/[id] — not found");
+    log.warn({ id: idNum }, "PUT /api/users/[id] - not found");
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -75,29 +75,29 @@ export async function DELETE(
 ) {
   const session = await auth();
   if (!session?.user) {
-    log.warn("DELETE /api/users/[id] — unauthorized");
+    log.warn("DELETE /api/users/[id] - unauthorized");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (session.user.role !== "Admin") {
-    log.warn({ user: session.user.email }, "DELETE /api/users/[id] — forbidden");
+    log.warn({ user: session.user.email }, "DELETE /api/users/[id] - forbidden");
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
   const idNum = Number(id);
   if (!Number.isInteger(idNum) || idNum < 1) {
-    log.warn({ id }, "DELETE /api/users/[id] — invalid id");
+    log.warn({ id }, "DELETE /api/users/[id] - invalid id");
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
 
   const selfEmail = session.user.email ?? "";
   const [target] = await db.select().from(users).where(eq(users.id, idNum)).limit(1);
   if (!target) {
-    log.warn({ id: idNum }, "DELETE /api/users/[id] — not found");
+    log.warn({ id: idNum }, "DELETE /api/users/[id] - not found");
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   if (target.email.toLowerCase() === selfEmail.toLowerCase()) {
-    log.warn({ id: idNum, user: selfEmail }, "DELETE /api/users/[id] — attempted self-delete");
+    log.warn({ id: idNum, user: selfEmail }, "DELETE /api/users/[id] - attempted self-delete");
     return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
   }
 

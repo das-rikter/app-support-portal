@@ -48,13 +48,13 @@ async function fetchAllMonitors(apiKey: string): Promise<BetterStackMonitor[]> {
 export async function GET() {
   const session = await auth();
   if (!session?.user) {
-    log.warn("GET /api/betterstack/monitors — unauthorized");
+    log.warn("GET /api/betterstack/monitors - unauthorized");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const apiKey = process.env.BETTERSTACK_API_KEY;
   if (!apiKey) {
-    log.error("GET /api/betterstack/monitors — BETTERSTACK_API_KEY not set");
+    log.error("GET /api/betterstack/monitors - BETTERSTACK_API_KEY not set");
     return NextResponse.json({ error: "BETTERSTACK_API_KEY is not configured" }, { status: 500 });
   }
 
@@ -72,7 +72,7 @@ export async function GET() {
     })));
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    log.error({ err }, "GET /api/betterstack/monitors — upstream error");
+    log.error({ err }, "GET /api/betterstack/monitors - upstream error");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

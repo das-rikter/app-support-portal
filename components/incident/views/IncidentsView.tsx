@@ -1,10 +1,8 @@
 "use client";
 
-import { useDeleteIncident } from "@/hooks/useIncidents";
 import { formatMinutes, parseOutageHrs } from "@/lib/incidentUtils";
 import { useIncidentStore } from "@/store/useIncidentStore";
 import type { Incident } from "@/types/incident";
-import { Pencil, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 const TH =
@@ -28,19 +26,11 @@ const CHIP: Record<string, string> = {
 const controlCls =
   "border border-border rounded-lg px-2 py-1.5 text-xs cursor-pointer focus:outline-none bg-secondary text-foreground";
 
-interface Props {
-  role?: string;
-  onEdit?: (incident: Incident) => void;
-}
-
-export function IncidentsView({ role, onEdit }: Props) {
+export function IncidentsView() {
   const filtered = useIncidentStore((s) => s.filtered) as Incident[];
   const [search, setSearch] = useState("");
   const [sortCol, setSortCol] = useState<"date" | "product" | "severity" | "downtime">("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [confirmDelete, setConfirmDelete] = useState<Incident | null>(null);
-
-  const deleteIncident = useDeleteIncident();
 
   const rows = useMemo(() => {
     const q = search.toLowerCase();
@@ -74,137 +64,79 @@ export function IncidentsView({ role, onEdit }: Props) {
     return r;
   }, [filtered, search, sortCol, sortDir]);
 
-  const handleDelete = async (incident: Incident) => {
-    if (incident.id == null) return;
-    await deleteIncident.mutateAsync(incident.id);
-    setConfirmDelete(null);
-  };
-
-  const isAdmin = role === "Admin";
-
   return (
-    <>
-      <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
-        <div className="flex justify-between items-center px-5 pt-4 pb-3 gap-3">
-          <div>
-            <div className="text-sm font-bold text-foreground">All Incidents</div>
-            <div className="text-xs mt-0.5 text-muted-foreground">Full incident log with search and filters</div>
-          </div>
-          <div className="flex gap-2 items-center">
-            <input
-              type="text"
-              placeholder="Search incidents…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="border border-border rounded-lg px-3 py-1.5 text-sm w-56 focus:outline-none focus:border-[#d66a06] bg-secondary text-foreground"
-            />
-            <select
-              value={sortCol}
-              onChange={(e) => setSortCol(e.target.value as typeof sortCol)}
-              className={controlCls}
-            >
-              <option value="date">Sort: Date</option>
-              <option value="product">Sort: Product</option>
-              <option value="severity">Sort: Severity</option>
-              <option value="downtime">Sort: Downtime hrs</option>
-            </select>
-            <select
-              value={sortDir}
-              onChange={(e) => setSortDir(e.target.value as "asc" | "desc")}
-              className={controlCls}
-            >
-              <option value="desc">Desc</option>
-              <option value="asc">Asc</option>
-            </select>
-          </div>
+    <div className="border border-border rounded-2xl overflow-hidden bg-card shadow-xs">
+      <div className="flex justify-between items-center px-5 pt-4 pb-3 gap-3">
+        <div>
+          <div className="text-sm font-bold text-foreground">All Incidents</div>
+          <div className="text-xs mt-0.5 text-muted-foreground">Full incident log with search and filters</div>
         </div>
-
-        <div className="max-h-120 overflow-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className={TH}>Date</th>
-                <th className={TH}>Product</th>
-                <th className={TH}>Function</th>
-                <th className={TH}>Sev</th>
-                <th className={TH}>Incident</th>
-                <th className={TH}>Outage</th>
-                <th className={TH}>Cause</th>
-                <th className={TH}>Ownership</th>
-                <th className={TH}>Alert</th>
-                {isAdmin && <th className={TH}>Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((d, i) => (
-                <tr key={d.id ?? i} className="hover:bg-secondary/50">
-                  <td className={TD + " tabular-nums text-xs font-medium text-muted-foreground whitespace-nowrap"}>{d.date}</td>
-                  <td className={TD + " font-semibold"}>{d.product}</td>
-                  <td className={TD + " text-muted-foreground text-xs"}>{d.function}</td>
-                  <td className={TD}><span className={SEV_CLASS[d.severity]}>{d.severity}</span></td>
-                  <td className={TD + " max-w-60"}>{d.title}</td>
-                  <td className={TD + " tabular-nums text-xs font-medium"}>{formatMinutes(d.downtime)}</td>
-                  <td className={TD + " text-muted-foreground text-xs"}>{d.cause || "—"}</td>
-                  <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.external}>{d.dasCaused ? "Internal" : "External"}</span></td>
-                  <td className={TD}><span className={d.alerted ? CHIP.yes : CHIP.no}>{d.alerted ? "Yes" : "No"}</span></td>
-                  {isAdmin && (
-                    <td className={TD}>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => onEdit?.(d)}
-                          className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                          title="Edit"
-                        >
-                          <Pencil size={13} />
-                        </button>
-                        <button
-                          onClick={() => setConfirmDelete(d)}
-                          className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex justify-between px-5 py-2.5 text-xs border-t border-border text-muted-foreground">
-          <span>{rows.length} incidents shown</span>
-          <span>DAS Incident Log</span>
+        <div className="flex gap-2 items-center">
+          <input
+            type="text"
+            placeholder="Search incidents…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border border-border rounded-lg px-3 py-1.5 text-sm w-56 focus:outline-none focus:border-[#d66a06] bg-secondary text-foreground"
+          />
+          <select
+            value={sortCol}
+            onChange={(e) => setSortCol(e.target.value as typeof sortCol)}
+            className={controlCls}
+          >
+            <option value="date">Sort: Date</option>
+            <option value="product">Sort: Product</option>
+            <option value="severity">Sort: Severity</option>
+            <option value="downtime">Sort: Downtime hrs</option>
+          </select>
+          <select
+            value={sortDir}
+            onChange={(e) => setSortDir(e.target.value as "asc" | "desc")}
+            className={controlCls}
+          >
+            <option value="desc">Desc</option>
+            <option value="asc">Asc</option>
+          </select>
         </div>
       </div>
 
-      {/* Delete confirmation dialog */}
-      {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full shadow-xl">
-            <h3 className="text-base font-bold text-foreground mb-2">Delete Incident?</h3>
-            <p className="text-sm text-muted-foreground mb-5">
-              <span className="font-semibold text-foreground">{confirmDelete.title}</span> will be permanently deleted.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setConfirmDelete(null)}
-                className="px-4 py-2 rounded-lg border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(confirmDelete)}
-                disabled={deleteIncident.isPending}
-                className="px-4 py-2 rounded-lg bg-destructive text-white text-sm font-semibold hover:bg-destructive/90 transition-colors disabled:opacity-50"
-              >
-                {deleteIncident.isPending ? "Deleting…" : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      <div className="max-h-120 overflow-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              <th className={TH}>Date</th>
+              <th className={TH}>Product</th>
+              <th className={TH}>Function</th>
+              <th className={TH}>Sev</th>
+              <th className={TH}>Incident</th>
+              <th className={TH}>Outage</th>
+              <th className={TH}>Cause</th>
+              <th className={TH}>Ownership</th>
+              <th className={TH}>Alert</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((d, i) => (
+              <tr key={d.id ?? i} className="hover:bg-secondary/50">
+                <td className={TD + " tabular-nums text-xs font-medium text-muted-foreground whitespace-nowrap"}>{d.date}</td>
+                <td className={TD + " font-semibold"}>{d.product}</td>
+                <td className={TD + " text-muted-foreground text-xs"}>{d.function}</td>
+                <td className={TD}><span className={SEV_CLASS[d.severity]}>{d.severity}</span></td>
+                <td className={TD + " max-w-60"}>{d.title}</td>
+                <td className={TD + " tabular-nums text-xs font-medium"}>{formatMinutes(d.downtime)}</td>
+                <td className={TD + " text-muted-foreground text-xs"}>{d.cause || "-"}</td>
+                <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.external}>{d.dasCaused ? "Internal" : "External"}</span></td>
+                <td className={TD}><span className={d.alerted ? CHIP.yes : CHIP.no}>{d.alerted ? "Yes" : "No"}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex justify-between px-5 py-2.5 text-xs border-t border-border text-muted-foreground">
+        <span>{rows.length} incidents shown</span>
+        <span>DAS Incident Log</span>
+      </div>
+    </div>
   );
 }

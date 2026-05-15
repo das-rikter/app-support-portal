@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from 'react';
-import { useIncidentStore } from '@/store/useIncidentStore';
 import { PlotlyChart } from '@/components/incident/PlotlyChart';
-import { parseOutageHrs, isMultiApp, CHART_COLORS, chartBase, formatMinutes, getMonthFromDate } from '@/lib/incidentUtils';
+import { CHART_COLORS, chartBase, formatMinutes, getMonthFromDate, isMultiApp, parseOutageHrs } from '@/lib/incidentUtils';
+import { useIncidentStore } from '@/store/useIncidentStore';
 import type { Incident } from '@/types/incident';
+import { useMemo, useState } from 'react';
 
 const c = CHART_COLORS;
 const CAUSE_COLORS = [c.o, c.o2, c.o3, c.b, c.b2, c.b3, c.g, c.y, c.r, c.p, '#94a3b8', '#64748b'];
@@ -160,9 +160,9 @@ const SEV_CLASS: Record<string, string> = {
 const CHIP: Record<string, string> = {
   internal: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(214,106,6,0.10)] text-[#d66a06] dark:bg-[rgba(214,106,6,0.18)]',
   external: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(59,130,246,0.12)] text-[#3b82f6] dark:bg-[rgba(59,130,246,0.18)]',
-  yes:      'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(22,163,74,0.12)] text-[#16a34a] dark:bg-[rgba(22,163,74,0.18)]',
-  no:       'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(107,114,128,0.12)] text-muted-foreground',
-  na:       'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(107,114,128,0.08)] text-muted-foreground',
+  yes: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(22,163,74,0.12)] text-[#16a34a] dark:bg-[rgba(22,163,74,0.18)]',
+  no: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(107,114,128,0.12)] text-muted-foreground',
+  na: 'inline-flex px-[9px] py-[3px] rounded-full text-[11px] font-bold bg-[rgba(107,114,128,0.08)] text-muted-foreground',
 };
 
 const CARD_HEAD = 'flex justify-between items-start px-5 pt-[18px] pb-0';
@@ -174,9 +174,9 @@ const controlCls = 'border border-border rounded-lg px-2 py-1.5 text-xs cursor-p
 function KpiCard({ accent, children }: { accent: 'accent' | 'blue' | 'green' | 'warn'; children: React.ReactNode }) {
   const bar: Record<string, string> = {
     accent: 'bg-gradient-to-r from-[#d66a06] to-[#f1a24b]',
-    blue:   'bg-[#3b82f6]',
-    green:  'bg-[#16a34a]',
-    warn:   'bg-[#d97706]',
+    blue: 'bg-[#3b82f6]',
+    green: 'bg-[#16a34a]',
+    warn: 'bg-[#d97706]',
   };
   return (
     <div className="relative overflow-hidden bg-card rounded-2xl border border-border p-5 shadow-xs">
@@ -365,7 +365,7 @@ export function OverviewView() {
         <div className="max-h-120 overflow-auto">
           <table className="w-full border-collapse">
             <thead><tr>
-              {['Date','Product','Function','Sev','Incident Title','Outage','Downtime','Root Cause','Ownership','Alert','Alerted Via','DAS Caused'].map((h) => (
+              {['Date', 'Product', 'Function', 'Sev', 'Incident Title', 'Outage', 'Downtime', 'Root Cause', 'Ownership', 'Alert', 'Alerted Via', 'DAS Caused'].map((h) => (
                 <th key={h} className={TH}>{h}</th>
               ))}
             </tr></thead>
@@ -379,10 +379,10 @@ export function OverviewView() {
                   <td className={TD + ' text-[13px] max-w-55'}>{d.title}</td>
                   <td className={TD + ' tabular-nums text-xs font-medium'}>{formatMinutes(d.outage)}</td>
                   <td className={TD + ' tabular-nums text-xs font-medium text-[#3b82f6]'}>{formatMinutes(d.downtime)}</td>
-                  <td className={TD + ' text-muted-foreground text-xs'}>{d.cause || '—'}</td>
+                  <td className={TD + ' text-muted-foreground text-xs'}>{d.cause || '-'}</td>
                   <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.external}>{d.dasCaused ? 'Internal' : 'External'}</span></td>
                   <td className={TD}><span className={d.alerted ? CHIP.yes : CHIP.no}>{d.alerted ? 'Yes' : 'No'}</span></td>
-                  <td className={TD + ' text-muted-foreground text-xs'}>{d.alertSrc || '—'}</td>
+                  <td className={TD + ' text-muted-foreground text-xs'}>{d.alertSrc || '-'}</td>
                   <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.no}>{d.dasCaused ? 'Yes' : 'No'}</span></td>
                 </tr>
               ))}
@@ -522,7 +522,7 @@ export function OverviewView() {
             <div className="max-h-120 overflow-auto">
               <table className="w-full border-collapse">
                 <thead><tr>
-                  {['Date','Products Affected','Function','Sev','Incident Title','Outage','Downtime','Root Cause','Ownership','Alert','Alerted Via','DAS Caused'].map((h) => (
+                  {['Date', 'Products Affected', 'Function', 'Sev', 'Incident Title', 'Outage', 'Downtime', 'Root Cause', 'Ownership', 'Alert', 'Alerted Via', 'DAS Caused'].map((h) => (
                     <th key={h} className={TH}>{h}</th>
                   ))}
                 </tr></thead>
@@ -536,12 +536,12 @@ export function OverviewView() {
                       <td className={TD + ' text-[13px] max-w-55'}>{d.title}</td>
                       <td className={TD + ' tabular-nums text-xs font-medium'}>{formatMinutes(d.outage)}</td>
                       <td className={TD + ' tabular-nums text-xs font-medium text-[#3b82f6]'}>{formatMinutes(d.downtime)}</td>
-                      <td className={TD + ' text-muted-foreground text-xs'}>{d.cause || '—'}</td>
+                      <td className={TD + ' text-muted-foreground text-xs'}>{d.cause || '-'}</td>
                       <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.external}>{d.dasCaused ? 'Internal' : 'External'}</span></td>
                       <td className={TD}><span className={d.alerted ? CHIP.yes : CHIP.no}>{d.alerted ? 'Yes' : 'No'}</span></td>
-                      <td className={TD + ' text-muted-foreground text-xs'}>{d.alertSrc || '—'}</td>
+                      <td className={TD + ' text-muted-foreground text-xs'}>{d.alertSrc || '-'}</td>
                       <td className={TD}><span className={d.dasCaused ? CHIP.internal : CHIP.no}>{d.dasCaused ? 'Yes' : 'No'}</span></td>
-                        </tr>
+                    </tr>
                   ))}
                 </tbody>
               </table>

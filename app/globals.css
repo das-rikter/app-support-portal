@@ -1,4 +1,4 @@
-/* Satoshi font is loaded via <link> in app/layout.tsx — not here.
+/* Satoshi font is loaded via <link> in app/layout.tsx - not here.
    External @import url() cannot appear after @import "tailwindcss"
    because PostCSS inlines Tailwind before passing the file on. */
 
@@ -283,7 +283,7 @@
   }
 }
 
-/* 6. Base resets — all rules expressed as Tailwind utilities via @apply */
+/* 6. Base resets - all rules expressed as Tailwind utilities via @apply */
 @layer base {
   * {
     @apply border-border box-border;
@@ -302,9 +302,9 @@
   }
 }
 
-/* 7. Print styles — weekly bug report PDF export */
+/* 7. Print styles - weekly bug report PDF export */
 @media print {
-  /* ---- Force light mode — reset every variable the .dark class overrides ---- */
+  /* ---- Force light mode - reset every variable the .dark class overrides ---- */
   :root,
   .dark {
     color-scheme: light;
@@ -443,7 +443,7 @@
     overflow: visible !important;
   }
 
-  /* ---- Page title area — hidden in browser, shown when printing ---- */
+  /* ---- Page title area - hidden in browser, shown when printing ---- */
   .print-report-header {
     display: block !important;
     margin-bottom: 16pt;

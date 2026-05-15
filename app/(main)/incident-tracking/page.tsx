@@ -1,7 +1,6 @@
 "use client";
 
 import { FilterBar } from "@/components/incident/FilterBar";
-import { IncidentModal } from "@/components/incident/IncidentModal";
 import { QuickStats } from "@/components/incident/QuickStats";
 import { ViewTabs } from "@/components/incident/ViewTabs";
 import { IncidentsView } from "@/components/incident/views/IncidentsView";
@@ -13,20 +12,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useIncidents } from "@/hooks/useIncidents";
 import { useIncidentStore } from "@/store/useIncidentStore";
 import type { Incident } from "@/types/incident";
-import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function IncidentTrackingPage() {
-  const { data: session } = useSession();
-  const role = session?.user?.role ?? "Viewer";
-
   const activeView = useIncidentStore((s) => s.activeView);
   const setIncidents = useIncidentStore((s) => s.setIncidents);
 
   const { data: incidents, isLoading, error } = useIncidents();
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingIncident, setEditingIncident] = useState<Incident | null>(null);
 
   useEffect(() => {
     if (incidents) {
@@ -36,76 +28,45 @@ export default function IncidentTrackingPage() {
 
   const hasData = (incidents?.length ?? 0) > 0;
 
-  const handleAddIncident = () => {
-    setEditingIncident(null);
-    setModalOpen(true);
-  };
-
-  const handleEditIncident = (incident: Incident) => {
-    setEditingIncident(incident);
-    setModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setModalOpen(false);
-    setEditingIncident(null);
-  };
-
   return (
-    <>
-      <div className="space-y-6 pt-6">
-        <PageHeader
-          title="Incident Tracking"
-          description="Monitor and manage active incidents."
-        />
-        <Card>
-          <CardContent>
-            <FilterBar role={role} onAddIncident={handleAddIncident} />
-            <ViewTabs />
+    <div className="space-y-6 pt-6">
+      <PageHeader
+        title="Incident Tracking"
+        description="View and analyze incident history across all products."
+      />
+      <Card>
+        <CardContent>
+          <FilterBar />
+          <ViewTabs />
 
-            {isLoading ? (
-              <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
-                Loading incidents…
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+              Loading incidents…
+            </div>
+          ) : error ? (
+            <div className="border border-destructive/30 bg-destructive/10 rounded-2xl p-8 mt-6 text-center">
+              <p className="text-sm text-destructive font-medium">
+                {error instanceof Error ? error.message : "Failed to load incidents"}
+              </p>
+            </div>
+          ) : !hasData ? (
+            <div className="border border-dashed border-border bg-card rounded-2xl p-12 mt-6 text-center">
+              <h2 className="text-xl font-semibold text-foreground">No incidents yet.</h2>
+              <p className="mt-2 text-sm text-muted-foreground">No incidents have been recorded yet.</p>
+            </div>
+          ) : (
+            <>
+              <QuickStats />
+              <div className="py-4">
+                {activeView === "overview" && <OverviewView />}
+                {activeView === "products" && <ProductsView />}
+                {activeView === "process" && <ProcessView />}
+                {activeView === "incidents" && <IncidentsView />}
               </div>
-            ) : error ? (
-              <div className="border border-destructive/30 bg-destructive/10 rounded-2xl p-8 mt-6 text-center">
-                <p className="text-sm text-destructive font-medium">
-                  {error instanceof Error ? error.message : "Failed to load incidents"}
-                </p>
-              </div>
-            ) : !hasData ? (
-              <div className="border border-dashed border-border bg-card rounded-2xl p-12 mt-6 text-center">
-                <h2 className="text-xl font-semibold text-foreground">No incidents yet.</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {role === "Admin"
-                    ? "Click \"Add Incident\" above to add the first incident."
-                    : "No incidents have been recorded yet."}
-                </p>
-              </div>
-            ) : (
-              <>
-                <QuickStats />
-                <div className="py-4">
-                  {activeView === "overview" && <OverviewView />}
-                  {activeView === "products" && <ProductsView />}
-                  {activeView === "process" && <ProcessView />}
-                  {activeView === "incidents" && (
-                    <IncidentsView role={role} onEdit={handleEditIncident} />
-                  )}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {role === "Admin" && (
-        <IncidentModal
-          open={modalOpen}
-          onClose={handleModalClose}
-          editing={editingIncident}
-        />
-      )}
-    </>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

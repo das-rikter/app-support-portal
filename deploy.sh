@@ -2,12 +2,12 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Azure Container Apps deployment — uses ACR Tasks (no local Docker required)
+# Azure Container Apps deployment - uses ACR Tasks (no local Docker required)
 #
 # Prerequisites:
 #   - az CLI installed and logged in  (az login)
 #   - Environment variables already set on the Container App
-#     (az containerapp secret set / --env-vars) — not managed by this script
+#     (az containerapp secret set / --env-vars) - not managed by this script
 #
 # Usage:
 #   ./deploy.sh            # builds in ACR and deploys with git SHA tag
@@ -29,7 +29,7 @@ for arg in "$@"; do
 done
 
 if [[ "$NO_BUILD" == false ]]; then
-  echo "Queuing build in ACR ($TAG) — no local Docker required..."
+  echo "Queuing build in ACR ($TAG) - no local Docker required..."
 
   # --no-wait avoids streaming logs (which crashes az CLI on Windows due to
   # unicode characters in Next.js build output). We poll status instead.

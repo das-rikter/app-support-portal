@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import logger from "@/lib/logger";
-import { GROUPED_MONITOR_NAMES, normalizeMonitorName } from "@/lib/monitorGroups";
 import type { DayStatus } from "@/lib/monitorGroups";
+import { GROUPED_MONITOR_NAMES, normalizeMonitorName } from "@/lib/monitorGroups";
 import { NextResponse } from "next/server";
 
 const log = logger.child({ route: "betterstack/history" });
@@ -45,14 +45,21 @@ async function fetchAllMonitors(apiKey: string, revalidate: number): Promise<Bet
 }
 
 async function fetchIncidents(apiKey: string, monitorId: string, from: Date, revalidate: number): Promise<BetterStackIncident[]> {
-  const url = `https://uptime.betterstack.com/api/v2/monitors/${monitorId}/incidents?from=${from.toISOString()}&per_page=250`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-    next: { revalidate },
-  });
-  if (!res.ok) return [];
-  const body = await res.json();
-  return body.data ?? [];
+  const all: BetterStackIncident[] = [];
+  let url: string | null = `https://uptime.betterstack.com/api/v2/monitors/${monitorId}/incidents?from=${from.toISOString()}&per_page=250`;
+
+  while (url) {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      next: { revalidate },
+    });
+    if (!res.ok) break;
+    const body = await res.json() as { data: BetterStackIncident[]; pagination?: { next?: string | null } };
+    all.push(...body.data);
+    url = body.pagination?.next ?? null;
+  }
+
+  return all;
 }
 
 function computeDayStatuses(incidents: BetterStackIncident[], days: number): DayStatus[] {
@@ -61,11 +68,11 @@ function computeDayStatuses(incidents: BetterStackIncident[], days: number): Day
 
   for (let i = days - 1; i >= 0; i--) {
     const dayStart = new Date(now);
-    dayStart.setDate(dayStart.getDate() - i);
-    dayStart.setHours(0, 0, 0, 0);
+    dayStart.setUTCDate(dayStart.getUTCDate() - i);
+    dayStart.setUTCHours(0, 0, 0, 0);
 
     const dayEnd = new Date(dayStart);
-    dayEnd.setHours(23, 59, 59, 999);
+    dayEnd.setUTCHours(23, 59, 59, 999);
 
     const dayIncidents = incidents.filter((inc) => {
       const start = new Date(inc.attributes.started_at);
@@ -95,13 +102,13 @@ function secondsUntilMidnight(): number {
 export async function GET() {
   const session = await auth();
   if (!session?.user) {
-    log.warn("GET /api/betterstack/history — unauthorized");
+    log.warn("GET /api/betterstack/history - unauthorized");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const apiKey = process.env.BETTERSTACK_API_KEY;
   if (!apiKey) {
-    log.error("GET /api/betterstack/history — BETTERSTACK_API_KEY not set");
+    log.error("GET /api/betterstack/history - BETTERSTACK_API_KEY not set");
     return NextResponse.json({ error: "BETTERSTACK_API_KEY is not configured" }, { status: 500 });
   }
 
@@ -117,7 +124,8 @@ export async function GET() {
     log.debug({ total: allMonitors.length, grouped: grouped.length }, "fetched monitors for history");
 
     const from = new Date();
-    from.setDate(from.getDate() - HISTORY_DAYS);
+    from.setUTCDate(from.getUTCDate() - HISTORY_DAYS);
+    from.setUTCHours(0, 0, 0, 0);
 
     const entries = await Promise.all(
       grouped.map(async (m) => {
@@ -135,11 +143,11 @@ export async function GET() {
     }
 
     return NextResponse.json(historyMap, {
-      headers: { "Cache-Control": `private, max-age=${ttl}` },
+      headers: { "Cache-Control": "private, no-cache" },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    log.error({ err }, "GET /api/betterstack/history — error");
+    log.error({ err }, "GET /api/betterstack/history - error");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

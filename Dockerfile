@@ -14,7 +14,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-# Production image — copy only what's needed
+# Production image - copy only what's needed
 FROM base AS runner
 WORKDIR /app
 

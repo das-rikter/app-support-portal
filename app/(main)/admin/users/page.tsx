@@ -45,7 +45,7 @@ function UserRow({ user, isSelf }: { user: AppUser; isSelf: boolean }) {
             {user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}
           </div>
           <div>
-            <div className="text-sm font-medium text-foreground">{user.name || "—"}</div>
+            <div className="text-sm font-medium text-foreground">{user.name || "-"}</div>
             <div className="text-xs text-muted-foreground">{user.email}</div>
           </div>
         </div>

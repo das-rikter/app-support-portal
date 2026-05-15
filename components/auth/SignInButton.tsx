@@ -14,7 +14,7 @@ export function SignInButton() {
       }}
       aria-label="Sign in with Microsoft"
     >
-      {/* Microsoft logo — hardcoded brand colours are authorised per design system */}
+      {/* Microsoft logo - hardcoded brand colours are authorised per design system */}
       <svg
         width="20"
         height="20"

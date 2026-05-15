@@ -18,7 +18,7 @@ export function parseOutageHrs(s: string | number): number {
 }
 
 export function formatMinutes(minutes: number): string {
-  if (!minutes) return '—';
+  if (!minutes) return '-';
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return `${h}:${m.toString().padStart(2, '0')}`;
@@ -61,16 +61,16 @@ export function getYears(data: Incident[]): string[] {
 }
 
 export const CHART_COLORS = {
-  o:  '#d66a06',
+  o: '#d66a06',
   o2: '#f1a24b',
   o3: '#f5c78a',
-  b:  '#3b82f6',
+  b: '#3b82f6',
   b2: '#60a5fa',
   b3: '#93c5fd',
-  g:  '#16a34a',
-  r:  '#dc2626',
-  y:  '#d97706',
-  p:  '#8b5cf6',
+  g: '#16a34a',
+  r: '#dc2626',
+  y: '#d97706',
+  p: '#8b5cf6',
 } as const;
 
 export function chartBase(extraMargin: Record<string, number> = {}): object {

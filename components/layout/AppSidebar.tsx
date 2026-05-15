@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { AlertTriangle, Bug, Home, Users } from "lucide-react";
+import { AlertTriangle, Bug, Home, Settings2, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -13,6 +13,7 @@ const baseNavItems = [
 ];
 
 const adminNavItems = [
+  { href: "/admin/incident-management", label: "Incident Management", icon: Settings2 },
   { href: "/admin/users", label: "User Management", icon: Users },
 ];
 
